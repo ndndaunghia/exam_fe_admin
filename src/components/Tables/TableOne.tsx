@@ -83,7 +83,7 @@ const TableOne = () => {
             </h5>
           </div>
         </div>
-
+{/* 
         {brandData.map((brand, key) => (
           <div
             className={`grid grid-cols-3 sm:grid-cols-5 ${
@@ -118,7 +118,7 @@ const TableOne = () => {
               <p className="text-meta-5">{brand.conversion}%</p>
             </div>
           </div>
-        ))}
+        ))} */}
       </div>
     </div>
   );

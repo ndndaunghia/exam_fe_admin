@@ -12,10 +12,12 @@ import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Tables from './pages/Tables';
+import Tables from './pages/Tables/TableUsers';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
+import TableUsers from './pages/Tables/TableUsers';
+import TableCourses from './pages/Tables/TableCourses';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -84,7 +86,7 @@ function App() {
           element={
             <>
               <PageTitle title="Tables Users" />
-              <Tables />
+              <TableUsers />
             </>
           }
         />
@@ -93,7 +95,7 @@ function App() {
           element={
             <>
               <PageTitle title="Tables Courses" />
-              <Tables />
+              <TableCourses />
             </>
           }
         />
