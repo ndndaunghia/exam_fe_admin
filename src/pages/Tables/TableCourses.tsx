@@ -7,6 +7,7 @@ interface Lesson {
   content: string;
   options?: string[]; // for quiz questions
   correctAnswer?: string;
+  correctAnswers?: boolean[];
   detailAnswer?: string;
 }
 
@@ -37,6 +38,34 @@ const TableCourses: React.FC = () => {
     subject: '',
     courseDescription: '',
   });
+
+  function toggleCorrectAnswer(
+    chapterIndex: number,
+    lessonIndex: number,
+    optionIndex: number,
+  ) {
+    setFormData((prevData) => {
+      const newChapters = JSON.parse(JSON.stringify(prevData.chapters));
+      const lesson = newChapters[chapterIndex].lessons[lessonIndex];
+      if (!lesson.correctAnswers) {
+        lesson.correctAnswers = new Array(lesson.options?.length || 0).fill(
+          false,
+        );
+      }
+      lesson.correctAnswers[optionIndex] = !lesson.correctAnswers[optionIndex];
+
+      // Update correctAnswer string
+      const correctLetters = lesson.correctAnswers
+        .map((isCorrect: any, index: any) =>
+          isCorrect ? String.fromCharCode(65 + index) : null,
+        )
+        .filter(Boolean)
+        .join(', ');
+      lesson.correctAnswer = correctLetters;
+
+      return { ...prevData, chapters: newChapters };
+    });
+  }
 
   function closeModal() {
     setIsOpen(false);
@@ -147,17 +176,41 @@ const TableCourses: React.FC = () => {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    console.log('Form submitted:', formData);
+    const updatedFormData = {
+      ...formData,
+      chapters: formData.chapters.map((chapter) => ({
+        ...chapter,
+        lessons: chapter.lessons.map((lesson) => {
+          if (lesson.type === 'quiz' && lesson.correctAnswers) {
+            const correctAnswerString = lesson.correctAnswers
+              .map((isCorrect, index) =>
+                isCorrect ? String.fromCharCode(65 + index) : null,
+              )
+              .filter(Boolean)
+              .join(', ');
+            return { ...lesson, correctAnswer: correctAnswerString };
+          }
+          return lesson;
+        }),
+      })),
+    };
+
+    const formDataSubmit = JSON.parse(JSON.stringify(updatedFormData));
+    formDataSubmit.chapters = formDataSubmit.chapters.map(
+      (chapter: Chapter) => {
+        chapter.lessons = chapter.lessons.map((lesson) => {
+          if (lesson.type === 'quiz') {
+            delete lesson.correctAnswers;
+          }
+          return lesson;
+        });
+        return chapter;
+      },
+    );
+
+    console.log('Form submitted:', formDataSubmit);
     closeModal();
-    setFormData({
-      courseName: '',
-      chapters: [{ name: '', lessons: [{ type: 'video', content: '' }] }],
-      author: '',
-      price: '',
-      thumbnail: '',
-      subject: '',
-      courseDescription: '',
-    });
+    // Reset form data...
   }
 
   function removeChapter(chapterIndex: number) {
@@ -233,7 +286,7 @@ const TableCourses: React.FC = () => {
             <div className="fixed inset-0 bg-black bg-opacity-25" />
           </Transition.Child>
 
-          <div className="fixed inset-0 overflow-y-auto">
+          <div className="fixed inset-0 overflow-y-auto pt-18">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
               <Transition.Child
                 as={Fragment}
@@ -394,52 +447,54 @@ const TableCourses: React.FC = () => {
                                   <div className="mt-2 grid grid-cols-2 gap-2">
                                     {lesson.options.map(
                                       (option, optionIndex) => (
-                                        <input
+                                        <div
                                           key={optionIndex}
-                                          type="text"
-                                          value={option}
-                                          onChange={(e) =>
-                                            handleChange(
-                                              e,
-                                              chapterIndex,
-                                              lessonIndex,
-                                              optionIndex,
-                                            )
-                                          }
-                                          placeholder={`Đáp án ${
-                                            optionIndex + 1
-                                          }`}
-                                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-1 border-black border-[1px]"
-                                        />
+                                          className="flex items-center"
+                                        >
+                                          <input
+                                            type="text"
+                                            value={option}
+                                            onChange={(e) =>
+                                              handleChange(
+                                                e,
+                                                chapterIndex,
+                                                lessonIndex,
+                                                optionIndex,
+                                              )
+                                            }
+                                            placeholder={`Đáp án ${
+                                              optionIndex + 1
+                                            }`}
+                                            className={`block w-full rounded-md shadow-sm focus:ring focus:ring-opacity-50 p-1 border ${
+                                              lesson.correctAnswers?.[
+                                                optionIndex
+                                              ]
+                                                ? 'border-green-500 bg-green-100'
+                                                : 'border-gray-300'
+                                            }`}
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              toggleCorrectAnswer(
+                                                chapterIndex,
+                                                lessonIndex,
+                                                optionIndex,
+                                              )
+                                            }
+                                            className={`ml-2 p-1 rounded-full ${
+                                              lesson.correctAnswers?.[
+                                                optionIndex
+                                              ]
+                                                ? 'bg-green-500 text-white'
+                                                : 'bg-gray-200'
+                                            }`}
+                                          >
+                                            ✓
+                                          </button>
+                                        </div>
                                       ),
                                     )}
-                                    {/* <div className="grid grid-cols-1">
-                                      <div
-                                        key="correct-answer"
-                                        className="col-span-2"
-                                      > */}
-                                    <label htmlFor="" className="mt-4">
-                                      Nhập đáp án đúng
-                                    </label>
-                                    <input
-                                      type="text"
-                                      name="correctAnswer"
-                                      placeholder="A, B"
-                                      value={
-                                        formData.chapters[chapterIndex].lessons[
-                                          lessonIndex
-                                        ].correctAnswer
-                                      }
-                                      onChange={(e) =>
-                                        handleCorrectAnswerChange(
-                                          e,
-                                          chapterIndex,
-                                          lessonIndex,
-                                        )
-                                      }
-                                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-1 border-black border-[1px]"
-                                    />
-
                                     <textarea
                                       name="detailAnswer"
                                       placeholder="Đáp án chi tiết"
@@ -464,8 +519,8 @@ const TableCourses: React.FC = () => {
                                       }
                                     </textarea>
                                   </div>
-                                  // </div>
                                 )}
+
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -569,7 +624,7 @@ const TableCourses: React.FC = () => {
                           <button
                             type="button"
                             onClick={prevStep}
-                            className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                            className="bg-gray-500 text-black px-4 py-2 rounded-md"
                           >
                             Quay lại
                           </button>
