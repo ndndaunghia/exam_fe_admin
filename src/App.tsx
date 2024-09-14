@@ -12,12 +12,13 @@ import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Tables from './pages/Tables/TableUsers';
+import TableUsers from './pages/Tables/TableUsers';
+import TableCourses from './pages/Tables/TableCourses';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
-import TableUsers from './pages/Tables/TableUsers';
-import TableCourses from './pages/Tables/TableCourses';
+import ProtectedRoute from './components/ProtectectedRoute';
+import { TableSubjects } from './pages/Tables/TableSubjects';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -36,121 +37,117 @@ function App() {
   ) : (
     <DefaultLayout>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/auth/signin" element={<SignIn />} />
+        <Route path="/auth/signup" element={<SignUp />} />
+
+        {/* Protected Routes */}
         <Route
-          index
+          path="/"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="eCommerce Dashboard" />
               <ECommerce />
-            </>
-          }
-        />
-        <Route
-          path="/calendar"
-          element={
-            <>
-              <PageTitle title="Calendar" />
-              <Calendar />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/profile"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Profile" />
               <Profile />
-            </>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Calendar" />
+              <Calendar />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/forms/form-elements"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Form Elements" />
               <FormElements />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/forms/form-layout"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Form Layout" />
               <FormLayout />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/tables/tables-users"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Tables Users" />
               <TableUsers />
-            </>
+            </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/tables/tables-courses"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Tables Courses" />
               <TableCourses />
-            </>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tables/tables-subjects"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Tables Subjects" />
+              <TableSubjects />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/settings"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Settings" />
               <Settings />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/chart"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Basic Chart" />
               <Chart />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/ui/alerts"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Alerts" />
               <Alerts />
-            </>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/ui/buttons"
           element={
-            <>
+            <ProtectedRoute>
               <PageTitle title="Buttons" />
               <Buttons />
-            </>
-          }
-        />
-        <Route
-          path="/auth/signin"
-          element={
-            <>
-              <PageTitle title="Signin" />
-              <SignIn />
-            </>
-          }
-        />
-        <Route
-          path="/auth/signup"
-          element={
-            <>
-              <PageTitle title="Signup" />
-              <SignUp />
-            </>
+            </ProtectedRoute>
           }
         />
       </Routes>
