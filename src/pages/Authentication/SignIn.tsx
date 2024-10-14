@@ -3,26 +3,25 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
-import { loginUser } from '../../services/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
+import { login } from '../../services/auth/authSlice';
 
 const SignIn: React.FC = () => {
-  const [username, setUsername] = React.useState('');
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const dispatch = useAppDispatch(); // use the typed dispatch
   const navigate = useNavigate();
-  const user = useAppSelector((state) => state.auth.user);
+  // const user = useAppSelector((state) => state.auth.user);
+
+  const { user, loading, error } = useAppSelector((state) => state.auth);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const resultAction = await dispatch(loginUser({ username, password }));
-      if (loginUser.fulfilled.match(resultAction)) {
-        if (resultAction.payload?.data?.role === 'admin') {
-          localStorage.setItem('userId', resultAction.payload.data._id);
-          // redirect to the admin dashboard
-          navigate('/');
-        }
+      const resultAction = await dispatch(login({ email, password }));
+      if (login.fulfilled.match(resultAction)) {
+        console.log(resultAction.payload);
+        
       }
     } catch (error) {
       console.error(error);
@@ -47,11 +46,6 @@ const SignIn: React.FC = () => {
                 <img className="hidden dark:block" src={Logo} alt="Logo" />
                 <img className="dark:hidden" src={LogoDark} alt="Logo" />
               </Link>
-
-              <p className="2xl:px-20">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit
-                suspendisse.
-              </p>
 
               <span className="mt-15 inline-block">
                 <svg
@@ -193,8 +187,8 @@ const SignIn: React.FC = () => {
                   <div className="relative">
                     <input
                       type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your username"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                     />

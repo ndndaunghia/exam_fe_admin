@@ -4,6 +4,7 @@ import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-01.png';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { fetchUserData, logout } from '../../services/auth/authSlice';
+// import { fetchUserData, logout } from '../../services/auth/authSlice';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
