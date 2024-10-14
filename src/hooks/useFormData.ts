@@ -14,7 +14,7 @@ interface Chapter {
   lessons: Lesson[];
 }
 
-export interface FormData {
+export interface FormDataCourse {
   courseName: string;
   courseDescription?: string;
   chapters: Chapter[];
@@ -24,10 +24,10 @@ export interface FormData {
   subject: string;
 }
 
-export const useFormData = () => {
+export const useFormDataCourse = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormDataCourse] = useState<FormDataCourse>({
     courseName: '',
     chapters: [{ name: '', lessons: [{ type: 'video', content: '' }] }],
     author: '',
@@ -51,7 +51,7 @@ export const useFormData = () => {
     optionIndex: number | null = null,
   ) {
     const { name, value } = e.target;
-    setFormData((prevData) => {
+    setFormDataCourse((prevData) => {
       if (chapterIndex === null) {
         return { ...prevData, [name]: value };
       } else if (lessonIndex === null) {
@@ -77,7 +77,7 @@ export const useFormData = () => {
     event.preventDefault();
     console.log('Form submitted:', formData);
     closeModal();
-    setFormData({
+    setFormDataCourse({
       courseName: '',
       chapters: [{ name: '', lessons: [{ type: 'video', content: '' }] }],
       author: '',
@@ -101,6 +101,6 @@ export const useFormData = () => {
     handleSubmit,
     nextStep,
     prevStep,
-    setFormData,
+    setFormDataCourse,
   };
 };

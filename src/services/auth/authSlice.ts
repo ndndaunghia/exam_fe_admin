@@ -33,7 +33,7 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await axiosInstance.post('/login', credentials);
+      const response = await axiosInstance.post('/user/login', credentials);
       // Save token to localStorage
       //   localStorage.setItem('token', response.data.token);
       return response.data;
@@ -60,7 +60,7 @@ export const fetchUserData = createAsyncThunk(
       };
 
       const response = await axiosInstance.get(
-        `/getUserData/${userId}`,
+        `/user/getUserData/${userId}`,
         config,
       );
       return response.data;
