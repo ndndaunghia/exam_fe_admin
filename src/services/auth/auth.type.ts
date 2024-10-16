@@ -23,7 +23,28 @@ export interface AuthResponse {
 
 export interface AuthState {
   user: User | null;
+  users: User[];
   token: string | null;
   loading: boolean;
   error: string | null;
+}
+
+export interface ListUserResponse {
+  msg: string;
+  code: number;
+  data: {
+    users: {
+      data: User[];
+      total: number;
+      per_page: number;
+      current_page: number;
+      last_page: number;
+      has_more_pages: boolean;
+    };
+  };
+}
+
+export interface AuthRequest {
+  email: string;
+  password: string;
 }

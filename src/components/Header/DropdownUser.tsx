@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-01.png';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
-import { fetchUserData, logout } from '../../services/auth/authSlice';
+import { fetchUserDataAsync, logout } from '../../services/auth/authSlice';
 // import { fetchUserData, logout } from '../../services/auth/authSlice';
 
 const DropdownUser = () => {
@@ -15,12 +15,16 @@ const DropdownUser = () => {
     dispatch(logout());
   }
 
+  const userId = localStorage.getItem('userId');
+
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
     if (userId) {
-      dispatch(fetchUserData(userId));
+      dispatch(fetchUserDataAsync());
     }
-  }, [dispatch]);
+  }, []);
+
+  console.log(user?.name);
+  
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -31,7 +35,7 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            {user?.username}
+            {user?.name}
           </span>
           {/* <span className="block text-xs">UX Designer</span> */}
         </span>
@@ -58,7 +62,7 @@ const DropdownUser = () => {
       </Link>
 
       {/* <!-- Dropdown Start --> */}
-      {user?.username !== '' && dropdownOpen && (
+      {user?.name !== undefined && dropdownOpen && (
         <div
           className={`absolute right-0 mt-4 flex w-62.5 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark`}
         >
@@ -162,4 +166,4 @@ const DropdownUser = () => {
   );
 };
 
-export default DropdownUser;
+export default memo(DropdownUser);

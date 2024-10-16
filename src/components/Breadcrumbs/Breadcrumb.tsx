@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 interface BreadcrumbProps {
   pageName: string;
@@ -23,4 +24,4 @@ const Breadcrumb = ({ pageName }: BreadcrumbProps) => {
   );
 };
 
-export default Breadcrumb;
+export default memo(Breadcrumb);

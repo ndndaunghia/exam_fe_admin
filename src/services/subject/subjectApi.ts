@@ -1,5 +1,6 @@
 import axiosInstance from '../../utils/axiosInstance';
-import { SubjectListResponse, SubjectRequest, SubjectResponse } from './Subject.type';
+import { SubjectListResponse, SubjectRequest, SubjectResponse } from './subject.type';
+
 
 //API thêm môn học
 export const upsertSubject = async (data: SubjectRequest, token: string) => {
@@ -17,7 +18,7 @@ export const upsertSubject = async (data: SubjectRequest, token: string) => {
 
 // API xóa môn học
 export const deleteSubject = async (id: number, token: string) => {
-  const response = await axiosInstance.delete(`/subjects/${id}`, {
+  const response = await axiosInstance.post(`/subjects/${id}/delete`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -31,8 +32,8 @@ export const updateSubject = async (
   data: SubjectRequest,
   token: string,
 ) => {
-  const response = await axiosInstance.put<SubjectResponse>(
-    `/subjects/${id}`,
+  const response = await axiosInstance.post<SubjectResponse>(
+    `/subjects/upsert/${id}`,
     data,
     {
       headers: {
@@ -54,19 +55,20 @@ export const getSubjectDetail = async (id: number, token: string) => {
 };
 
 //API lấy danh sách môn học
-export const getSubjects = async (token: string, page: number = 1, limit: number = 10) => {
-    const response = await axiosInstance.get<SubjectListResponse>(
-      '/subjects', 
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,  // Truyền token vào headers
-        },
-        params: {
-          page,  // Tham số phân trang
-          limit, // Số lượng môn học trên mỗi trang
-        },
-      }
-    );
-    return response.data;
-  };
-  
+export const getSubjects = async (
+  token: string,
+  page: number = 1,
+  limit: number = 10,
+) => {
+  const response = await axiosInstance.get<SubjectListResponse>('/subjects', {
+    headers: {
+      Authorization: `Bearer ${token}`, // Truyền token vào headers
+    },
+    params: {
+      page, // Tham số phân trang
+      limit, // Số lượng môn học trên mỗi trang
+    },
+  });
+  return response.data;
+};
+

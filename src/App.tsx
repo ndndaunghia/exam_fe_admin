@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
@@ -8,21 +7,25 @@ import SignUp from './pages/Authentication/SignUp';
 import Calendar from './pages/Calendar';
 import Chart from './pages/Chart';
 import ECommerce from './pages/Dashboard/ECommerce';
+import Profile from './pages/Profile';
 import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
 import TableUsers from './pages/Tables/TableUsers';
 import TableCourses from './pages/Tables/TableCourses';
+import Settings from './pages/Settings';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
-import ProtectedRoute from './components/ProtectectedRoute';
+import { useSelector } from 'react-redux';
+import { RootState } from './app/store';
+import PublicRoute from './routes/PublicRoute';
+import ProtectedRoute from './routes/ProtectectedRoute';
 import { TableSubjects } from './pages/Tables/TableSubjects';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const { pathname } = useLocation();
+  const { token } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,9 +40,23 @@ function App() {
   ) : (
     <DefaultLayout>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/auth/signin" element={<SignIn />} />
-        <Route path="/auth/signup" element={<SignUp />} />
+        {/* Public Routes - bảo vệ bởi PublicRoute */}
+        <Route
+          path="/auth/signin"
+          element={
+            <PublicRoute>
+              <SignIn />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/auth/signup"
+          element={
+            <PublicRoute>
+              <SignUp />
+            </PublicRoute>
+          }
+        />
 
         {/* Protected Routes */}
         <Route
