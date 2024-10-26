@@ -21,6 +21,7 @@ import { RootState } from './app/store';
 import PublicRoute from './routes/PublicRoute';
 import ProtectedRoute from './routes/ProtectectedRoute';
 import { TableSubjects } from './pages/Tables/TableSubjects';
+import { TableAuthors } from './pages/Tables/TableAuthors';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -110,6 +111,15 @@ function App() {
             <ProtectedRoute>
               <PageTitle title="Tables Users" />
               <TableUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tables/tables-authors"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Tables Authors" />
+              <TableAuthors />
             </ProtectedRoute>
           }
         />

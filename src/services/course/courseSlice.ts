@@ -1,166 +1,204 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import Cookies from 'js-cookie';
-import axiosInstance from '../../utils/axiosInstance';
-import { FormDataCourse } from '../../pages/Tables/type';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+import { Course, CourseListResponse, CourseRequest, CourseResponse } from './course.type';
+import { deleteCourse, getCourseDetail, getCourses, updateCourse, upsertCourse } from './courseApi';
+import { COURSE_CONSTANTS } from '../../constants/Course';
 
 interface CourseState {
-  courses: any[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  courses: Course[]; // Mảng các khoá học
+  total: number;
+  currentPage: number;
+  lastPage: number;
+  loading: boolean;
   error: string | null;
+  success: boolean;
 }
 
 const initialState: CourseState = {
-  courses: [],
-  status: 'idle',
+  courses: [], // Mảng khoá học khởi tạo rỗng
+  total: 0,
+  currentPage: 1,
+  lastPage: 1,
+  loading: false,
   error: null,
+  success: false,
 };
 
-export const fetchAllCourses = createAsyncThunk(
-  'courses/getAllCourses',
-  async (_, { rejectWithValue }) => {
+// Async thunk cho việc lấy danh sách khoá học
+export const getCoursesAsync = createAsyncThunk(
+  'course/getCourses',
+  async (
+    courseData: { page: number; limit: number; token: string },
+    { rejectWithValue },
+  ) => {
     try {
-      const accessToken = Cookies.get('accessToken');
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
-      const response = await axiosInstance.get(
-        '/courses/getAllCourses',
-        config,
+      const response = await getCourses(
+        courseData.token,
+        courseData.page,
+        courseData.limit,
       );
-      return response.data;
+      // Trả về dữ liệu khoá học từ phản hồi API
+      return response.data.courses;
     } catch (error: any) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(COURSE_CONSTANTS.COURSE_GET_ALL_FAIL);
     }
   },
 );
 
-export const addNewCourse = createAsyncThunk(
-  'courses/addCourse',
-  async (courseData: FormDataCourse, { rejectWithValue }) => {
+// Async thunk cho việc thêm mới khoá học
+export const upsertCourseAsync = createAsyncThunk(
+  'course/upsertCourse',
+  async (
+    courseData: { data: CourseRequest; token: string },
+    { rejectWithValue },
+  ) => {
     try {
-      const accessToken = Cookies.get('accessToken');
-      console.log('accessToken', accessToken);
-
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
-      const response = await axiosInstance.post(
-        '/courses/addCourse',
-        courseData,
-        config,
-      );
-      return response.data;
+      const response = await upsertCourse(courseData.data, courseData.token);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(COURSE_CONSTANTS.COURSE_ADD_FAIL);
     }
   },
 );
 
-export const getCourseById = createAsyncThunk(
-  'courses/getCourse',
-  async (courseId: string, { rejectWithValue }) => {
+// Async thunk cho việc xóa khoá học
+export const deleteCourseAsync = createAsyncThunk(
+  'course/courseDelete',
+  async (courseData: { id: number; token: string }, { rejectWithValue }) => {
     try {
-      const accessToken = Cookies.get('accessToken');
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
-      const response = await axiosInstance.get(
-        `/courses/getCourse/${courseId}`,
-        config,
-      );
-      console.log('response', response.data);
-
-      return response.data;
+      const response = await deleteCourse(courseData.id, courseData.token);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(COURSE_CONSTANTS.COURSE_DELETE_FAIL);
     }
   },
 );
 
-export const deleteCourseById = createAsyncThunk(
-  'courses/deleteCourse',
-  async (courseId: string, { rejectWithValue }) => {
+// Async thunk cho việc xem chi tiết khoá học
+export const getCourseDetailAsync = createAsyncThunk(
+  'course/getCourseDetail',
+  async (courseData: { id: number; token: string }, { rejectWithValue }) => {
     try {
-      const accessToken = Cookies.get('accessToken');
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-      };
-      const response = await axiosInstance.delete(
-        `/courses/deleteCourse/${courseId}`,
-        config,
+      const response = await getCourseDetail(
+        courseData.id,
+        courseData.token,
       );
-      return response.data;
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(COURSE_CONSTANTS.COURSE_DETAIL_FAIL);
     }
   },
 );
 
-const courseSlice = createSlice({
-  name: 'courses',
+// Async thunk cho việc sửa khoá học
+export const updateCourseAsync = createAsyncThunk(
+  'course/updateCourse',
+  async (
+    courseData: { id: number; data: CourseRequest; token: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await updateCourse(
+        courseData.id,
+        courseData.data,
+        courseData.token,
+      );
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(COURSE_CONSTANTS.COURSE_UPDATE_FAIL);
+    }
+  },
+);
+
+const subjectSlice = createSlice({
+  name: 'course',
   initialState,
-  reducers: {},
+  reducers: {
+    resetCourseState(state) {
+      state.success = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllCourses.pending, (state) => {
-        state.status = 'loading';
+      // Lấy danh sách khoá học
+      .addCase(getCoursesAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
       })
-      .addCase(fetchAllCourses.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.courses = action.payload;
-      })
-      .addCase(fetchAllCourses.rejected, (state, action) => {
-        state.status = 'failed';
+      .addCase(
+        getCoursesAsync.fulfilled,
+        (
+          state,
+          action: PayloadAction<CourseListResponse['data']['courses']>,
+        ) => {
+          state.loading = false;
+          state.success = true;
+          state.courses = action.payload.data; // Gán danh sách khoá học vào state
+          state.total = action.payload.total;
+          state.currentPage = action.payload.current_page;
+          state.lastPage = action.payload.last_page;
+        },
+      )
+      .addCase(getCoursesAsync.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(addNewCourse.pending, (state) => {
-        state.status = 'loading';
+
+      // Thêm mới khoá học
+      .addCase(upsertCourseAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
       })
-      .addCase(addNewCourse.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.courses.push(action.payload);
-      })
-      .addCase(addNewCourse.rejected, (state, action) => {
-        state.status = 'failed';
+      .addCase(
+        upsertCourseAsync.fulfilled,
+        (state, action: PayloadAction<CourseResponse>) => {
+          state.loading = false;
+          state.success = true;
+        },
+      )
+      .addCase(upsertCourseAsync.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(getCourseById.pending, (state) => {
-        state.status = 'loading';
+
+      // Xóa khoá học
+      .addCase(deleteCourseAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
       })
-      .addCase(getCourseById.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.courses = action.payload;
+      .addCase(deleteCourseAsync.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
       })
-      .addCase(getCourseById.rejected, (state, action) => {
-        state.status = 'failed';
+      .addCase(deleteCourseAsync.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(deleteCourseById.pending, (state) => {
-        state.status = 'loading';
+
+      // Sửa khoá học
+      .addCase(updateCourseAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
       })
-      .addCase(deleteCourseById.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.courses = state.courses.filter(
-          (course) => course.course_id !== action.payload,
-        );
-      })
-      .addCase(deleteCourseById.rejected, (state, action) => {
-        state.status = 'failed';
+      .addCase(
+        updateCourseAsync.fulfilled,
+        (state, action: PayloadAction<CourseResponse>) => {
+          state.loading = false;
+          state.success = true;
+        },
+      )
+      .addCase(updateCourseAsync.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       });
   },
 });
 
-export default courseSlice.reducer;
+export const { resetCourseState } = subjectSlice.actions;
+
+export default subjectSlice.reducer;

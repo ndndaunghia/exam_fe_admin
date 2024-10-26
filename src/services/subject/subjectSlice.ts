@@ -12,6 +12,7 @@ import {
   SubjectRequest,
   SubjectResponse,
 } from './subject.type';
+import { SUBJECT_CONSTANTS } from '../../constants/Subject';
 
 interface SubjectState {
   subjects: Subject[]; // Mảng các môn học
@@ -49,7 +50,7 @@ export const getSubjectsAsync = createAsyncThunk(
       // Trả về dữ liệu môn học từ phản hồi API
       return response.data.subjects;
     } catch (error: any) {
-      return rejectWithValue('Lấy danh sách môn học thất bại');
+      return rejectWithValue(SUBJECT_CONSTANTS.SUBJECT_GET_ALL_FAIL);
     }
   },
 );
@@ -65,7 +66,7 @@ export const upsertSubjectAsync = createAsyncThunk(
       const response = await upsertSubject(subjectData.data, subjectData.token);
       return response;
     } catch (error: any) {
-      return rejectWithValue('Thêm mới môn học thất bại');
+      return rejectWithValue(SUBJECT_CONSTANTS.SUBJECT_ADD_FAIL);
     }
   },
 );
@@ -78,7 +79,7 @@ export const deleteSubjectAsync = createAsyncThunk(
       const response = await deleteSubject(subjectData.id, subjectData.token);
       return response;
     } catch (error: any) {
-      return rejectWithValue('Xóa môn học thất bại');
+      return rejectWithValue(SUBJECT_CONSTANTS.SUBJECT_DELETE_FAIL);
     }
   },
 );
@@ -94,7 +95,7 @@ export const getSubjectDetailAsync = createAsyncThunk(
       );
       return response;
     } catch (error: any) {
-      return rejectWithValue('Xem chi tiết môn học thất bại');
+      return rejectWithValue(SUBJECT_CONSTANTS.SUBJECT_DETAIL_FAIL);
     }
   },
 );
@@ -114,7 +115,7 @@ export const updateSubjectAsync = createAsyncThunk(
       );
       return response;
     } catch (error: any) {
-      return rejectWithValue('Sửa môn học thất bại');
+      return rejectWithValue(SUBJECT_CONSTANTS.SUBJECT_UPDATE_FAIL);
     }
   },
 );

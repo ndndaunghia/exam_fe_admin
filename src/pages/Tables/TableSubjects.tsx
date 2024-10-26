@@ -1,25 +1,27 @@
 import { Dialog, Transition } from '@headlessui/react';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import EditIcon from '../../icons/EditIcon';
 import DeleteIcon from '../../icons/DeleteIcon';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
-import { getSubjectsAsync, upsertSubjectAsync, deleteSubjectAsync, updateSubjectAsync } from '../../services/subject/subjectSlice';
+import {
+  getSubjectsAsync,
+  upsertSubjectAsync,
+  deleteSubjectAsync,
+  updateSubjectAsync,
+} from '../../services/subject/subjectSlice';
 import { RootState } from '../../app/store';
 import { Subject, SubjectRequest } from '../../services/subject/subject.type';
-
-interface FormDataCourse {
-  name: string;
-  thumbnail_url?: string;
-  description?: string;
-}
+import toast, { Toaster } from 'react-hot-toast';
+import { SUBJECT_CONSTANTS } from '../../constants/Subject';
+import Loader from '../../common/Loader';
 
 export const TableSubjects = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormDataCourse] = useState<FormDataCourse>({
+  const [formData, setFormDataCourse] = useState<SubjectRequest>({
     name: '',
-    thumbnail_url: '',
-    description: '',
+    thumbnail_url: null,
+    description: null,
   });
   const [isEdit, setIsEdit] = useState(false);
   const [editingSubjectId, setEditingSubjectId] = useState<number | null>(null);
@@ -27,15 +29,16 @@ export const TableSubjects = () => {
   const dispatch = useAppDispatch();
 
   // Lấy danh sách môn học từ Redux store
-  const { subjects, loading } = useAppSelector((state: RootState) => state.subject);
-
-  // Lấy token từ localStorage
+  const { subjects, loading } = useAppSelector(
+    (state: RootState) => state.subject,
+  );
   const token = localStorage.getItem('token') || '';
-
-  useEffect(() => {
-    // Gọi API lấy danh sách môn học khi component mount
-    dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
-  }, [dispatch, token]);
+  // Lấy token từ localStorage
+  const fetchSubjects = useCallback(() => {
+    if (token) {
+      dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
+    }
+  }, [dispatch]);
 
   // Mở form thêm hoặc chỉnh sửa môn học
   function handleEdit(item: Subject) {
@@ -53,7 +56,7 @@ export const TableSubjects = () => {
   function closeModal() {
     setIsOpen(false);
     setIsEdit(false);
-    setFormDataCourse({ name: '', thumbnail_url: '', description: '' });
+    setFormDataCourse({ name: '', thumbnail_url: null, description: null });
     setEditingSubjectId(null);
   }
 
@@ -63,7 +66,7 @@ export const TableSubjects = () => {
 
     const formattedData: SubjectRequest = {
       name: formData.name,
-      thumbnail_url: formData.thumbnail_url ?? null,  // Sử dụng `??` để chuyển đổi undefined thành null
+      thumbnail_url: formData.thumbnail_url ?? null, // Sử dụng `??` để chuyển đổi undefined thành null
       description: formData.description ?? null, // Tương tự cho description nếu cần
     };
 
@@ -75,11 +78,13 @@ export const TableSubjects = () => {
             data: formattedData,
             token,
             id: editingSubjectId,
-          })
+          }),
         ).unwrap();
         // Gọi lại danh sách môn học sau khi cập nhật
         dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
+        toast.success(SUBJECT_CONSTANTS.SUBJECT_UPDATE_SUCCESS);
       } catch (error) {
+        toast.error(SUBJECT_CONSTANTS.SUBJECT_UPDATE_FAIL);
         console.error('Cập nhật môn học thất bại:', error);
       }
     } else {
@@ -91,9 +96,11 @@ export const TableSubjects = () => {
             token,
           }),
         ).unwrap();
+        toast.success(SUBJECT_CONSTANTS.SUBJECT_ADD_SUCCESS);
         // Gọi lại danh sách môn học sau khi thêm mới
         dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
       } catch (error) {
+        toast.error(SUBJECT_CONSTANTS.SUBJECT_ADD_FAIL);
         console.error('Thêm mới môn học thất bại:', error);
       }
     }
@@ -102,16 +109,25 @@ export const TableSubjects = () => {
 
   // Xử lý sự kiện xóa môn học
   async function handleDelete(item: Subject) {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa môn học "${item.name}" không?`)) {
+    if (
+      window.confirm(`Bạn có chắc chắn muốn xóa môn học "${item.name}" không?`)
+    ) {
       try {
         await dispatch(deleteSubjectAsync({ id: item.id, token })).unwrap();
-        // Gọi lại danh sách môn học sau khi xóa
+        toast.success(SUBJECT_CONSTANTS.SUBJECT_DELETE_SUCCESS);
         dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
       } catch (error) {
+        toast.error(SUBJECT_CONSTANTS.SUBJECT_DELETE_FAIL);
         console.error('Xóa môn học thất bại:', error);
       }
     }
   }
+
+  useEffect(() => {
+    if (!subjects || subjects.length === 0) {
+      fetchSubjects();
+    }
+  }, [dispatch, subjects]);
 
   return (
     <>
@@ -126,28 +142,37 @@ export const TableSubjects = () => {
 
           <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
             <div className="col-span-1 flex items-center">
-              <p className="font-medium">ID</p>
+              <p className="font-medium">{SUBJECT_CONSTANTS.SUBJECT_ID}</p>
             </div>
             <div className="col-span-3 hidden items-center sm:flex">
-              <p className="font-medium">Tên môn học</p>
+              <p className="font-medium">{SUBJECT_CONSTANTS.SUBJECT_NAME}</p>
             </div>
             <div className="col-span-2 hidden items-center sm:flex">
-              <p className="font-medium">Tùy chỉnh</p>
+              <p className="font-medium">
+                {SUBJECT_CONSTANTS.SUBJECT_MODIFICATION}
+              </p>
             </div>
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-10">Đang tải dữ liệu...</div>
+            <Loader />
           ) : (
             subjects?.map((item: Subject) => (
-              <div key={item.id} className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+              <div
+                key={item.id}
+                className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5"
+              >
                 <div className="col-span-1 flex items-center">
                   <p className="font-medium">{item.id}</p>
                 </div>
                 <div className="col-span-3 hidden items-center sm:flex">
                   <div className="flex items-center gap-2">
                     {item.thumbnail_url && (
-                      <img src={item.thumbnail_url} alt={item.name} className="w-10 h-10 rounded-full object-cover" />
+                      <img
+                        src={item.thumbnail_url}
+                        alt={item.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                     )}
                     <p className="font-medium">{item.name}</p>
                   </div>
@@ -207,9 +232,11 @@ export const TableSubjects = () => {
                 <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
                   <Dialog.Title
                     as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
+                    className="text-lg font-semibold leading-6 text-gray-900 text-center"
                   >
-                    {isEdit ? 'Cập nhật môn học' : 'Thêm môn học mới'}
+                    {isEdit
+                      ? SUBJECT_CONSTANTS.SUBJECT_UPDATE
+                      : SUBJECT_CONSTANTS.SUBJECT_ADD}
                   </Dialog.Title>
                   <form onSubmit={handleSubmit} className="mt-2">
                     <div className="mb-4">
@@ -217,7 +244,7 @@ export const TableSubjects = () => {
                         htmlFor="name"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Tên môn học
+                        {SUBJECT_CONSTANTS.SUBJECT_NAME}
                       </label>
                       <input
                         type="text"
@@ -230,7 +257,7 @@ export const TableSubjects = () => {
                             name: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
+                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                         required
                       />
                     </div>
@@ -240,20 +267,20 @@ export const TableSubjects = () => {
                         htmlFor="thumbnail_url"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        URL Thumbnail
+                        {SUBJECT_CONSTANTS.SUBJECT_IMAGE}
                       </label>
                       <input
-                        type="text"
+                        type="file"
                         name="thumbnail_url"
                         id="thumbnail_url"
-                        value={formData.thumbnail_url}
+                        value={formData.thumbnail_url || ''}
                         onChange={(e) =>
                           setFormDataCourse({
                             ...formData,
                             thumbnail_url: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
+                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                       />
                     </div>
 
@@ -262,19 +289,19 @@ export const TableSubjects = () => {
                         htmlFor="description"
                         className="block text-sm font-medium text-gray-700"
                       >
-                        Mô tả
+                        {SUBJECT_CONSTANTS.SUBJECT_DESCRIPTION}
                       </label>
                       <textarea
                         name="description"
                         id="description"
-                        value={formData.description}
+                        value={formData.description || ''}
                         onChange={(e) =>
                           setFormDataCourse({
                             ...formData,
                             description: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
+                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                       />
                     </div>
 
@@ -283,7 +310,9 @@ export const TableSubjects = () => {
                         type="submit"
                         className="bg-green-500 text-white px-4 py-2 rounded-md"
                       >
-                        {isEdit ? 'Cập nhật' : 'Thêm môn học'}
+                        {isEdit
+                          ? SUBJECT_CONSTANTS.SUBJECT_UPDATE
+                          : SUBJECT_CONSTANTS.SUBJECT_ADD}
                       </button>
                       <button
                         type="button"
@@ -300,6 +329,7 @@ export const TableSubjects = () => {
           </div>
         </Dialog>
       </Transition>
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   );
 };

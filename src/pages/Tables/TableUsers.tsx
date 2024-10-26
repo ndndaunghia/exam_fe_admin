@@ -12,12 +12,12 @@ const TableUsers = () => {
     (state: RootState) => state.auth,
   );
 
+  const token = localStorage.getItem('token') || '';
   const fetchUsers = useCallback(() => {
-    const token = localStorage.getItem('token') || ''; 
     if (token) {
       dispatch(getListUserAsync({ page: 1, limit: 10, token }));
     }
-  }, [dispatch]); 
+  }, [dispatch]);
 
   useEffect(() => {
     if (!users || users.length === 0) {
