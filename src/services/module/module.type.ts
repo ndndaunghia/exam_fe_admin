@@ -14,10 +14,10 @@ export interface Module {
 }
 
 export interface ModuleRequest {
-  course_id: number;
+  course_id: number | null;
   name: string;
-  order: number;
-  status: number;
+  order: number | null;
+  status: number | null;
 }
 
 export interface ModuleListResponse {

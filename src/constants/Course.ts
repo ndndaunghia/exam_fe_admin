@@ -2,8 +2,13 @@ export const COURSE_CONSTANTS = {
     COURSE: 'Khoá học',
     COURSE_ID: 'ID',
     COURSE_NAME: 'Tên khoá học',
+    COURSE_AUTHOR: 'Tác giả',
+    COURSE_SUBJECT: 'Môn học',
+    COURSE_PRICE: 'Giá',
+    COURSE_DURATION: 'Thời lượng',
     COURSE_IMAGE: 'Hình ảnh',
     COURSE_DESCRIPTION: 'Mô tả',
+    COURSE_STATUS: 'Trạng thái',
     COURSE_MODIFICATION: 'Chỉnh sửa',
 
     COURSE_GET_ALL_SUCCESS: 'Lấy danh sách khoá học thành công',

@@ -110,7 +110,7 @@ export const updateCourseAsync = createAsyncThunk(
   },
 );
 
-const subjectSlice = createSlice({
+const courseSlice = createSlice({
   name: 'course',
   initialState,
   reducers: {
@@ -185,20 +185,18 @@ const subjectSlice = createSlice({
         state.error = null;
         state.success = false;
       })
-      .addCase(
-        updateCourseAsync.fulfilled,
-        (state, action: PayloadAction<CourseResponse>) => {
-          state.loading = false;
-          state.success = true;
-        },
-      )
+      .addCase(updateCourseAsync.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
       .addCase(updateCourseAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.success = false;
       });
   },
 });
 
-export const { resetCourseState } = subjectSlice.actions;
+export const { resetCourseState } = courseSlice.actions;
 
-export default subjectSlice.reducer;
+export default courseSlice.reducer;

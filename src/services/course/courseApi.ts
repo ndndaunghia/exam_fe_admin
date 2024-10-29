@@ -1,5 +1,5 @@
 import axiosInstance from '../../utils/axiosInstance';
-import { CourseListResponse, CourseRequest, CourseResponse } from './course.type';
+import { CourseListResponse, CourseRequest, CourseResponse, CourseUpdateResponse } from './course.type';
 
 //API thêm khoa' học
 export const upsertCourse = async (data: CourseRequest, token: string) => {
@@ -31,7 +31,7 @@ export const updateCourse= async (
   data: CourseRequest,
   token: string,
 ) => {
-  const response = await axiosInstance.post<CourseResponse>(
+  const response = await axiosInstance.post<CourseUpdateResponse>(
     `/courses/upsert/${id}`,
     data,
     {

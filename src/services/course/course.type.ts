@@ -8,6 +8,7 @@ export interface Course {
   description: string | null;
   price: number;
   duration: number | null;
+  status: number;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -16,14 +17,14 @@ export interface Course {
 }
 
 export interface CourseRequest {
-  subject_id: number;
+  subject_id: number | null;
+  author_id: number | null;
   name: string;
   thumbnail_url: string | null;
-  author_id: number;
-  total_purchases: number;
   description: string | null;
-  price: number;
+  price: number | null;
   duration: number | null;
+  status: number | null;
 }
 
 export interface CourseListResponse {
@@ -46,5 +47,13 @@ export interface CourseResponse {
   code: number;
   data: {
     course: Course;
+  };
+}
+
+export interface CourseUpdateResponse {
+  msg: string;
+  code: number;
+  data: {
+    message: string;
   };
 }

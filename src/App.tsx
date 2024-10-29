@@ -22,6 +22,7 @@ import PublicRoute from './routes/PublicRoute';
 import ProtectedRoute from './routes/ProtectectedRoute';
 import { TableSubjects } from './pages/Tables/TableSubjects';
 import { TableAuthors } from './pages/Tables/TableAuthors';
+import { CourseDetail } from './pages/CourseDetail/CourseDetail';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -131,6 +132,15 @@ function App() {
               <TableCourses />
             </ProtectedRoute>
           }
+        />
+        <Route
+        path="/tables/tables-courses/:id"
+        element={
+          <ProtectedRoute>
+            <PageTitle title="Tables Courses Detail" />
+            <CourseDetail />
+          </ProtectedRoute>
+        }
         />
         <Route
           path="/tables/tables-subjects"
