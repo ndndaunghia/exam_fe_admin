@@ -1,9 +1,20 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-
-import { Module, ModuleListResponse, ModuleRequest, ModuleResponse } from './module.type';
-import { deleteModule, getModuleDetail, getModules, updateModule, upsertModule } from './moduleApi';
+import {
+  Module,
+  ModuleListResponse,
+  ModuleRequest,
+  ModuleResponse,
+} from './module.type';
+import {
+  deleteModule,
+  getModuleDetail,
+  getModules,
+  updateModule,
+  upsertModule,
+} from './moduleApi';
 import { MODULE_CONSTANTS } from '../../constants/Module';
+import toast from 'react-hot-toast';
 
 interface ModuleState {
   modules: Module[]; // Mảng các module
@@ -57,7 +68,9 @@ export const upsertModuleAsync = createAsyncThunk(
       const response = await upsertModule(moduleData.data, moduleData.token);
       return response;
     } catch (error: any) {
-      return rejectWithValue(MODULE_CONSTANTS.MODULE_ADD_FAIL);
+      const errorMessage =
+        error.response?.data?.message || MODULE_CONSTANTS.MODULE_ADD_FAIL;
+      return rejectWithValue(errorMessage);
     }
   },
 );
@@ -80,10 +93,7 @@ export const getModuleDetailAsync = createAsyncThunk(
   'module/getModuleDetail',
   async (moduleData: { id: number; token: string }, { rejectWithValue }) => {
     try {
-      const response = await getModuleDetail(
-        moduleData.id,
-        moduleData.token,
-      );
+      const response = await getModuleDetail(moduleData.id, moduleData.token);
       return response;
     } catch (error: any) {
       return rejectWithValue(MODULE_CONSTANTS.MODULE_DETAIL_FAIL);
@@ -140,11 +150,14 @@ const moduleSlice = createSlice({
           state.total = action.payload.total;
           state.currentPage = action.payload.current_page;
           state.lastPage = action.payload.last_page;
+
+          // toast.success(MODULE_CONSTANTS.MODULE_GET_ALL_SUCCESS);
         },
       )
       .addCase(getModulesAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        // toast.error(action.payload as string);
       })
 
       // Thêm mới module
@@ -158,11 +171,15 @@ const moduleSlice = createSlice({
         (state, action: PayloadAction<ModuleResponse>) => {
           state.loading = false;
           state.success = true;
+          state.error = null;
+
+          toast.success(MODULE_CONSTANTS.MODULE_ADD_SUCCESS);
         },
       )
       .addCase(upsertModuleAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        toast.error(action.payload as string);
       })
 
       // Xóa module
@@ -174,10 +191,13 @@ const moduleSlice = createSlice({
       .addCase(deleteModuleAsync.fulfilled, (state) => {
         state.loading = false;
         state.success = true;
+        state.error = null;
+        toast.success(MODULE_CONSTANTS.MODULE_DELETE_SUCCESS);
       })
       .addCase(deleteModuleAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        toast.error(action.payload as string);
       })
 
       // Sửa module
@@ -191,11 +211,13 @@ const moduleSlice = createSlice({
         (state, action: PayloadAction<ModuleResponse>) => {
           state.loading = false;
           state.success = true;
+          toast.success(MODULE_CONSTANTS.MODULE_UPDATE_SUCCESS);
         },
       )
       .addCase(updateModuleAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        toast.error(action.payload as string);
       });
   },
 });

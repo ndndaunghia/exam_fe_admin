@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
@@ -6,18 +6,33 @@ import { RootState } from '../../app/store';
 import { Course } from '../../services/course/course.type';
 import { getCoursesAsync } from '../../services/course/courseSlice';
 import {
+  deleteModuleAsync,
   getModulesAsync,
   updateModuleAsync,
   upsertModuleAsync,
 } from '../../services/module/moduleSlice';
-import { FiPlus, FiMinus, FiVideo } from 'react-icons/fi';
-import { BsClock, BsPersonVideo3 } from 'react-icons/bs';
-import EditIcon from '../../icons/EditIcon';
-import DeleteIcon from '../../icons/DeleteIcon';
-import { Dialog, Transition } from '@headlessui/react';
+
+import ModulesList from './ModuleList';
+import CourseSummary from './CourseSummary';
+import ModuleFormModal from './ModuleFormModal';
 import { ModuleRequest } from '../../services/module/module.type';
-import { COURSE_CONSTANTS } from '../../constants/Course';
 import { Toaster } from 'react-hot-toast';
+import LessonFormModal from './LessonFormModal';
+import { LessonRequest } from '../../services/lesson/lesson.type';
+import {
+  deleteLessonAsync,
+  getLessonsAsync,
+  updateLessonAsync,
+  upsertLessonAsync,
+} from '../../services/lesson/lessonSlice';
+import { QuestionRequest } from '../../services/question/question.type';
+import {
+  deleteQuestionAsync,
+  getQuestionsAsync,
+  updateQuestionAsync,
+  upsertQuestionAsync,
+} from '../../services/question/questionSlice';
+import QuestionFormModal from './QuestionFormModal';
 
 const initialModuleState: ModuleRequest = {
   course_id: null,
@@ -26,21 +41,61 @@ const initialModuleState: ModuleRequest = {
   status: null,
 };
 
+const initialLessonState: LessonRequest = {
+  module_id: null,
+  name: '',
+  video_url: null,
+  description: null,
+  duration: null,
+  order: null,
+  status: null,
+};
+
+const initialQuestionState: QuestionRequest = {
+  lesson_id: null,
+  name: '',
+  description: null,
+  image_url: null,
+  status: null,
+  difficulty: null,
+  options: [],
+};
+
 export const CourseDetail = () => {
   const { id } = useParams();
   const dispatch = useAppDispatch();
-  const [isOpen, setIsOpen] = useState(false);
-  const [course, setCourse] = useState<Course | null>(null);
-  const [expandedChapters, setExpandedChapters] = useState<number[]>([]);
+  const token = localStorage.getItem('token') || '';
+
+  const { courses } = useAppSelector((state: RootState) => state.course);
+  const { modules, loading } = useAppSelector(
+    (state: RootState) => state.module,
+  );
+  const { lessons } = useAppSelector((state: RootState) => state.lesson);
+
+  const { questions } = useAppSelector((state: RootState) => state.question);
+
+  const [isModuleOpen, setIsModuleOpen] = useState(false);
+  const [isEditModule, setIsEditModule] = useState(false);
   const [editingModuleId, setEditingModuleId] = useState<number | null>(null);
   const [formModule, setFormModule] =
     useState<ModuleRequest>(initialModuleState);
-  const [isEdit, setIsEdit] = useState(false);
-  const { courses } = useAppSelector((state: RootState) => state.course);
-  const { modules, loading: loadingModules } = useAppSelector(
-    (state: RootState) => state.module,
+
+  const [isLessonOpen, setIsLessonOpen] = useState(false);
+  const [isEditLesson, setIsEditLesson] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
+  const [formLesson, setFormLesson] =
+    useState<LessonRequest>(initialLessonState);
+
+  const [isQuestionOpen, setIsQuestionOpen] = useState(false);
+  const [isEditQuestion, setIsEditQuestion] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(
+    null,
   );
-  const token = localStorage.getItem('token') || '';
+  const [formQuestion, setFormQuestion] =
+    useState<QuestionRequest>(initialQuestionState);
+
+  const [course, setCourse] = useState<Course | null>(null);
+  const [expandedChapters, setExpandedChapters] = useState<number[]>([]);
 
   useEffect(() => {
     if (!courses.length) {
@@ -63,29 +118,267 @@ export const CourseDetail = () => {
   useEffect(() => {
     if (id) {
       dispatch(getModulesAsync({ page: 1, limit: 10, token }));
+      dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+      dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
     }
   }, [dispatch, id, token]);
 
-  const openModal = (isEditMode: boolean = false) => {
-    setIsEdit(isEditMode);
-    if (!isEditMode) {
+  // Question
+  const openQuestionModal = (isEditQuestionMode: boolean = false) => {
+    setIsEditQuestion(isEditQuestionMode);
+    if (!isEditQuestionMode) {
+      setFormQuestion({
+        ...initialQuestionState,
+        lesson_id: lessons[0]?.id || null,
+        options: [
+          { content: '', explanation: '', is_correct: 0 },
+          { content: '', explanation: '', is_correct: 0 },
+          { content: '', explanation: '', is_correct: 0 },
+          { content: '', explanation: '', is_correct: 0 },
+        ],
+      });
+    }
+    setIsQuestionOpen(true);
+  };
+
+  const closeQuestionModal = () => {
+    setIsQuestionOpen(false);
+    setFormQuestion(initialQuestionState);
+    setIsEditQuestion(false);
+  };
+
+  const handleAddQuestion = (lessonId: number) => {
+    setFormQuestion({
+      ...initialQuestionState,
+      lesson_id: lessonId,
+      options: [
+        { content: '', explanation: '', is_correct: 0 },
+        { content: '', explanation: '', is_correct: 0 },
+        { content: '', explanation: '', is_correct: 0 },
+        { content: '', explanation: '', is_correct: 0 },
+      ],
+    });
+    setIsQuestionOpen(true); // Mở modal
+  };
+
+  const handleEditQuestion = (questionId: number) => {
+    const questionToEdit = questions.find((q) => q.id === questionId);
+    if (questionToEdit) {
+      setFormQuestion({
+        lesson_id: questionToEdit.lesson_id,
+        name: questionToEdit.name,
+        description: questionToEdit.description,
+        image_url: questionToEdit.image_url,
+        status: questionToEdit.status,
+        difficulty: questionToEdit.difficulty,
+        options: questionToEdit.options,
+      });
+      setIsEditQuestion(true);
+      setIsQuestionOpen(true);
+      setEditingQuestionId(questionId);
+    }
+  };
+
+  const handleSubmitQuestion = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formattedData: QuestionRequest = {
+      lesson_id: formQuestion.lesson_id,
+      name: formQuestion.name,
+      description: formQuestion.description,
+      image_url: formQuestion.image_url,
+      status: formQuestion.status,
+      difficulty: formQuestion.difficulty,
+      options: formQuestion.options,
+    };
+
+    console.log('Submitting question:', formattedData);
+    try {
+      if (isEditQuestion && editingQuestionId) {
+        // Call your update API here
+        await dispatch(
+          updateQuestionAsync({
+            data: formattedData,
+            token,
+            id: editingQuestionId,
+          }),
+        );
+      } else {
+        await dispatch(upsertQuestionAsync({ data: formattedData, token }));
+      }
+      closeQuestionModal();
+      // Refresh questions list
+      dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+    } catch (error) {
+      console.error('Error submitting question:', error);
+    }
+  };
+
+  const handleInputQuestionChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormQuestion((prev) => ({
+      ...prev,
+      [name]:
+        name === 'difficulty' || name === 'status'
+          ? value === ''
+            ? null
+            : parseInt(value)
+          : value,
+    }));
+  };
+
+  const handleDeleteQuestion = async (questionId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
+      try {
+        // Call your delete API here
+        console.log('Deleting question:', questionId);
+        await dispatch(deleteQuestionAsync({ id: questionId, token }));
+        dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+      } catch (error) {
+        console.error('Error deleting question:', error);
+      }
+    }
+  };
+  const handleOptionChange = (index: number, field: string, value: any) => {
+    setFormQuestion((prev) => ({
+      ...prev,
+      options: prev.options.map((option, i) =>
+        i === index ? { ...option, [field]: value } : option,
+      ),
+    }));
+  };
+
+  // Lesson
+  const openLessonModal = (isEditLessonMode: boolean = false) => {
+    setIsEditLesson(isEditLessonMode);
+    if (!isEditLessonMode) {
+      setFormLesson({
+        ...initialLessonState,
+        module_id: modules[0]?.id || null,
+      });
+    }
+    setIsLessonOpen(true);
+  };
+
+  const closeLessonModal = () => {
+    setIsLessonOpen(false);
+    setFormLesson(initialLessonState);
+    setIsEditLesson(false);
+  };
+
+  const handleAddLesson = (moduleId: number) => {
+    setFormLesson({
+      ...initialLessonState,
+      module_id: moduleId,
+    });
+    setIsLessonOpen(true);
+  };
+
+  const handleEditLesson = (lessonId: number) => {
+    const lessonToEdit = lessons.find((l) => l.id === lessonId);
+    if (lessonToEdit) {
+      setFormLesson({
+        module_id: lessonToEdit.module_id,
+        name: lessonToEdit.name,
+        video_url: lessonToEdit.video_url,
+        description: lessonToEdit.description,
+        duration: lessonToEdit.duration,
+        order: lessonToEdit.order,
+        status: lessonToEdit.status,
+      });
+      setIsEditLesson(true);
+      setIsLessonOpen(true);
+      setEditingLessonId(lessonId);
+    }
+  };
+
+  const handleSubmitLesson = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formattedData: LessonRequest = {
+      module_id: formLesson.module_id,
+      name: formLesson.name,
+      video_url: formLesson.video_url,
+      description: formLesson.description,
+      duration: formLesson.duration,
+      order: formLesson.order,
+      status: formLesson.status,
+    };
+
+    try {
+      if (isEditLesson && editingLessonId) {
+        // Call your update API here
+        await dispatch(
+          updateLessonAsync({
+            data: formattedData,
+            token,
+            id: editingLessonId,
+          }),
+        );
+      } else {
+        await dispatch(upsertLessonAsync({ data: formattedData, token }));
+      }
+      closeLessonModal();
+      // Refresh lessons list
+      dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+    } catch (error) {
+      console.error('Error submitting lesson:', error);
+    }
+  };
+
+  const handleInputLessonChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormLesson((prev) => ({
+      ...prev,
+      [name]:
+        name === 'order' || name === 'status'
+          ? value === ''
+            ? null
+            : parseInt(value)
+          : value,
+    }));
+  };
+
+  const handleDeleteLesson = async (lessonId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa bài giảng này?')) {
+      try {
+        // Call your delete API here
+        console.log('Deleting lesson:', lessonId);
+        await dispatch(deleteLessonAsync({ id: lessonId, token }));
+        dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+      } catch (error) {
+        console.error('Error deleting lesson:', error);
+      }
+    }
+  };
+
+  // Module
+  const openModuleModal = (isEditModuleMode: boolean = false) => {
+    setIsEditModule(isEditModuleMode);
+    if (!isEditModuleMode) {
       setFormModule({
         ...initialModuleState,
         course_id: course?.id || null,
       });
     }
-    setIsOpen(true);
+    setIsModuleOpen(true);
   };
 
-  const closeModal = () => {
-    setIsOpen(false);
+  const closeModuleModal = () => {
+    setIsModuleOpen(false);
     setFormModule(initialModuleState);
-    setIsEdit(false);
+    setIsEditModule(false);
   };
 
-  const handleAddLesson = (moduleId: number) => {};
+  // const handleAddLesson = (moduleId: number) => {};
 
-  const handleAddQuestion = (moduleId: number) => {};
+  // const handleAddQuestion = (moduleId: number) => {};
 
   const handleEditModule = (moduleId: number) => {
     const moduleToEdit = modules.find((m) => m.id === moduleId);
@@ -96,13 +389,13 @@ export const CourseDetail = () => {
         order: moduleToEdit.order,
         status: moduleToEdit.status,
       });
-      setIsEdit(true);
-      setIsOpen(true);
+      setIsEditModule(true);
+      setIsModuleOpen(true);
       setEditingModuleId(moduleId);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitModule = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formattedData: ModuleRequest = {
@@ -113,7 +406,7 @@ export const CourseDetail = () => {
     };
 
     try {
-      if (isEdit && editingModuleId) {
+      if (isEditModule && editingModuleId) {
         // Call your update API here
         await dispatch(
           updateModuleAsync({
@@ -125,7 +418,7 @@ export const CourseDetail = () => {
       } else {
         await dispatch(upsertModuleAsync({ data: formattedData, token }));
       }
-      closeModal();
+      closeModuleModal();
       // Refresh modules list
       dispatch(getModulesAsync({ page: 1, limit: 10, token }));
     } catch (error) {
@@ -133,7 +426,7 @@ export const CourseDetail = () => {
     }
   };
 
-  const handleInputChange = (
+  const handleInputModuleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
@@ -169,8 +462,7 @@ export const CourseDetail = () => {
       try {
         // Call your delete API here
         console.log('Deleting module:', moduleId);
-        // await dispatch(deleteModuleAsync({ moduleId, token }));
-        // Refresh modules list
+        await dispatch(deleteModuleAsync({ id: moduleId, token }));
         dispatch(getModulesAsync({ page: 1, limit: 10, token }));
       } catch (error) {
         console.error('Error deleting module:', error);
@@ -184,281 +476,75 @@ export const CourseDetail = () => {
 
   return (
     <>
-      <Breadcrumb pageName={`Course Detail - ${course.name}`} />
+      <Breadcrumb
+        pageName={`Course Detail - ${course?.name || 'Loading...'}`}
+      />
       <div className="md:px-4 lg:px-8 xl:px-14 2xl:px-22 mt-12">
-        {/* Course Content Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 px-2">
             <h3 className="text-2xl font-semibold text-black dark:text-white">
-              {course.name}
+              {course?.name}
             </h3>
             <p className="text-gray-600 my-4 dark:text-white">
-              {course.description}
+              {course?.description}
             </p>
-
-            {/* Modules Header */}
-            <div className="mt-10">
-              <h4 className="text-xl font-semibold dark:text-white">
-                Nội dung khóa học
-              </h4>
-              <div className="flex justify-between my-2 dark:text-white">
-                <ul className="flex gap-2">
-                  <li className="hidden lg:block">
-                    <strong>{modules.length}</strong> chương
-                  </li>
-                  <li className="hidden lg:block">|</li>
-                  <li>
-                    <strong>{course.duration}</strong> bài học
-                  </li>
-                  <li className="hidden md:block">|</li>
-                  <li className="hidden md:block">
-                    Thời lượng <strong>{course.duration}</strong>
-                  </li>
-                </ul>
-                <div>
-                  <span
-                    className="text-primary font-bold cursor-pointer"
-                    onClick={toggleAllChapters}
-                  >
-                    {expandedChapters.length === modules.length
-                      ? 'Thu gọn tất cả'
-                      : 'Mở rộng tất cả'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Modules List */}
-            <div className="mt-10 flex flex-col gap-4">
-              {loadingModules ? (
-                <div>Loading modules...</div>
-              ) : (
-                modules.map((module) => (
-                  <div key={module.id}>
-                    <div
-                      onClick={() => toggleChapter(module.id)}
-                      className="flex justify-between items-center cursor-pointer bg-orange-200 p-4 rounded-md"
-                    >
-                      <span>{module.name}</span>
-                      <div className="flex items-center gap-2">
-                        <EditIcon onClick={() => handleEditModule(module.id)} />
-                        <DeleteIcon
-                          onClick={() => handleDeleteModule(module.id)}
-                        />
-                        {expandedChapters.includes(module.id) ? (
-                          <FiMinus />
-                        ) : (
-                          <FiPlus />
-                        )}
-                      </div>
-                    </div>
-                    {expandedChapters.includes(module.id) && (
-                      <div className="ml-6 mt-2 flex gap-4">
-                        <button
-                          onClick={() => handleAddLesson(module.id)}
-                          className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                        >
-                          Thêm bài giảng
-                        </button>
-                        <button
-                          onClick={() => handleAddQuestion(module.id)}
-                          className="bg-purple-500 text-white px-3 py-1 rounded-md hover:bg-purple-600"
-                        >
-                          Thêm câu hỏi
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-              {/* Add Chapter Button */}
-              <button
-                className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                onClick={() => openModal(false)}
-              >
-                Thêm Chương
-              </button>
-            </div>
+            <ModulesList
+              modules={modules}
+              lessons={lessons}
+              questions={questions}
+              loading={loading}
+              toggleAllChapters={toggleAllChapters}
+              expandedChapters={expandedChapters}
+              toggleChapter={toggleChapter}
+              handleEditModule={handleEditModule}
+              handleDeleteModule={handleDeleteModule}
+              handleAddLesson={handleAddLesson}
+              handleEditLesson={handleEditLesson}
+              handleDeleteLesson={handleDeleteLesson}
+              handleAddQuestion={handleAddQuestion}
+              handleEditQuestion={handleEditQuestion}
+              handleDeleteQuestion={handleDeleteQuestion}
+            />
+            <button
+              className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              onClick={() => openModuleModal(false)}
+            >
+              Thêm Chương
+            </button>
           </div>
-
-          {/* Course Summary and Image */}
-          <div className="md:col-span-1 px-2 flex justify-center dark:text-white">
-            <div className="">
-              <div className="rounded-xl">
-                <img
-                  src={
-                    course.thumbnail_url || 'https://via.placeholder.com/150'
-                  }
-                  alt="Course Thumbnail"
-                  className="w-full h-full object-cover hover:opacity-80 rounded-xl"
-                />
-              </div>
-              <div className="flex flex-col items-center justify-center">
-                <h4 className="text-primary-light my-4">{course.price}đ</h4>
-                <button className="bg-secondary-light text-white px-6 py-3 rounded-md hover:bg-secondary">
-                  MUA NGAY
-                </button>
-                <ul className="my-10 hidden md:flex md:flex-col md:justify-start md:items-start">
-                  <li className="flex justify-center items-center gap-2 my-2">
-                    <FiVideo />
-                    {course.duration || 0} bài học
-                  </li>
-                  <li className="flex justify-center items-center gap-2 my-2">
-                    <BsClock />
-                    Thời lượng {course.duration}
-                  </li>
-                  <li className="flex justify-center items-center gap-2 my-2">
-                    <BsPersonVideo3 />
-                    Học mọi lúc mọi nơi
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <CourseSummary course={course!} />
         </div>
       </div>
+      <ModuleFormModal
+        isModuleOpen={isModuleOpen}
+        isEditModule={isEditModule}
+        formModule={formModule}
+        onClose={closeModuleModal}
+        handleSubmitModule={handleSubmitModule}
+        handleInputModuleChange={handleInputModuleChange}
+        closeModuleModal={closeModuleModal}
+      />
+      <LessonFormModal
+        isLessonOpen={isLessonOpen}
+        isLessonEdit={isEditLesson}
+        formLesson={formLesson}
+        onClose={closeLessonModal}
+        closeLessonModle={closeLessonModal}
+        handleSubmitLesson={handleSubmitLesson}
+        handleInputLessonChange={handleInputLessonChange}
+      />
 
-      {/* Module Form Modal */}
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
+      <QuestionFormModal
+        handleOptionChange={handleOptionChange}
+        isQuestionOpen={isQuestionOpen}
+        isQuestionEdit={isEditQuestion}
+        formQuestion={formQuestion}
+        onClose={closeQuestionModal}
+        closeQuestionModle={closeQuestionModal}
+        handleSubmitQuestion={handleSubmitQuestion}
+        handleInputQuestionChange={handleInputQuestionChange}
+      />
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-semibold leading-6 text-gray-900 text-center"
-                  >
-                    {isEdit ? 'Cập nhật chương' : 'Thêm chương mới'}
-                  </Dialog.Title>
-
-                  <form onSubmit={handleSubmit} className="mt-4">
-                    {/* Course ID - Read only */}
-                    <div className="mb-4">
-                      <label
-                        htmlFor="course_id"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Mã khóa học
-                      </label>
-                      <input
-                        type="text"
-                        name="course_id"
-                        id="course_id"
-                        value={formModule.course_id || ''}
-                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] bg-gray-100 px-2 py-2"
-                        disabled
-                      />
-                    </div>
-
-                    {/* Module Name */}
-                    <div className="mb-4">
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Tên chương
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        value={formModule.name}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
-                        required
-                      />
-                    </div>
-
-                    {/* Order */}
-                    <div className="mb-4">
-                      <label
-                        htmlFor="order"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Thứ tự
-                      </label>
-                      <input
-                        type="number"
-                        name="order"
-                        id="order"
-                        value={formModule.order || ''}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
-                        min="1"
-                        required
-                      />
-                    </div>
-
-                    {/* Status */}
-                    <div className="mb-4">
-                      <label
-                        htmlFor="status"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Trạng thái
-                      </label>
-                      <select
-                        name="status"
-                        id="status"
-                        value={
-                          formModule.status !== null
-                            ? formModule.status.toString()
-                            : ''
-                        }
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
-                        required
-                      >
-                        <option value="">Chọn trạng thái</option>
-                        <option value="1">1</option>
-                        <option value="0">0</option>
-                      </select>
-                    </div>
-                    <div className="flex justify-between">
-                      <button
-                        type="submit"
-                        className="bg-green-500 text-white px-4 py-2 rounded-md"
-                      >
-                        {isEdit
-                          ? COURSE_CONSTANTS.COURSE_UPDATE
-                          : COURSE_CONSTANTS.COURSE_ADD}
-                      </button>
-                      <button
-                        type="button"
-                        className="bg-red-500 text-white px-4 py-2 rounded-md"
-                        onClick={closeModal}
-                      >
-                        Hủy
-                      </button>
-                    </div>
-                  </form>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
       <Toaster position="top-center" reverseOrder={false} />
     </>
   );
