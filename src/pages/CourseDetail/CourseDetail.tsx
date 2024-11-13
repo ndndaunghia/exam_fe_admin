@@ -7,6 +7,7 @@ import { Course } from '../../services/course/course.type';
 import { getCoursesAsync } from '../../services/course/courseSlice';
 import {
   deleteModuleAsync,
+  getModuleDetailAsync,
   getModulesAsync,
   updateModuleAsync,
   upsertModuleAsync,
@@ -16,7 +17,7 @@ import ModulesList from './ModuleList';
 import CourseSummary from './CourseSummary';
 import ModuleFormModal from './ModuleFormModal';
 import { ModuleRequest } from '../../services/module/module.type';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import LessonFormModal from './LessonFormModal';
 import { LessonRequest } from '../../services/lesson/lesson.type';
 import {
@@ -33,6 +34,8 @@ import {
   upsertQuestionAsync,
 } from '../../services/question/questionSlice';
 import QuestionFormModal from './QuestionFormModal';
+import { getModuleDetail } from '../../services/module/moduleApi';
+import { useCloudinaryUpload } from '../../hooks/useCloudinaryUpload';
 
 const initialModuleState: ModuleRequest = {
   course_id: null,
@@ -73,6 +76,13 @@ export const CourseDetail = () => {
   const { lessons } = useAppSelector((state: RootState) => state.lesson);
 
   const { questions } = useAppSelector((state: RootState) => state.question);
+
+  const { uploadImage, isUploading, error } = useCloudinaryUpload({
+    cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+    uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESENT_NAME,
+  });
+
+  const [imagePreview, setImagePreview] = useState<string | null>('');
 
   const [isModuleOpen, setIsModuleOpen] = useState(false);
   const [isEditModule, setIsEditModule] = useState(false);
@@ -124,6 +134,23 @@ export const CourseDetail = () => {
   }, [dispatch, id, token]);
 
   // Question
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImagePreview(URL.createObjectURL(file)); // Đặt preview tạm thời
+
+    try {
+      const imageUrl = await uploadImage(file); // Chờ upload hoàn tất
+      if (imageUrl) {
+        setFormQuestion((prev) => ({ ...prev, image_url: imageUrl })); // Đặt image_url sau khi upload thành công
+      }
+    } catch {
+      toast.error('Failed to upload image');
+      setImagePreview(null); // Xóa preview nếu upload thất bại
+    }
+  };
+
   const openQuestionModal = (isEditQuestionMode: boolean = false) => {
     setIsEditQuestion(isEditQuestionMode);
     if (!isEditQuestionMode) {
@@ -489,7 +516,7 @@ export const CourseDetail = () => {
               {course?.description}
             </p>
             <ModulesList
-              modules={modules}
+              modules={modules.filter((m) => m.course_id === course.id)}
               lessons={lessons}
               questions={questions}
               loading={loading}
@@ -535,7 +562,11 @@ export const CourseDetail = () => {
       />
 
       <QuestionFormModal
+        imagePreview={imagePreview}
+        isUploading={isUploading}
+        error={error}
         handleOptionChange={handleOptionChange}
+        handleImageChange={handleImageChange}
         isQuestionOpen={isQuestionOpen}
         isQuestionEdit={isEditQuestion}
         formQuestion={formQuestion}

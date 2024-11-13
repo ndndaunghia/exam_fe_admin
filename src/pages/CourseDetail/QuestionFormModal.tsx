@@ -5,6 +5,9 @@ import { QuestionRequest } from '../../services/question/question.type';
 interface QuestionFormModalProps {
   isQuestionOpen: boolean;
   isQuestionEdit: boolean;
+  isUploading: boolean;
+  error: string | null;
+  imagePreview: string | null;
   formQuestion: QuestionRequest;
   onClose: () => void;
   closeQuestionModle: () => void;
@@ -15,17 +18,22 @@ interface QuestionFormModalProps {
     >,
   ) => void;
   handleOptionChange: (index: number, field: string, value: any) => void;
+  handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   isQuestionOpen,
   isQuestionEdit,
+  isUploading,
+  error,
+  imagePreview,
   formQuestion,
   onClose,
   closeQuestionModle,
   handleSubmitQuestion,
   handleInputQuestionChange,
   handleOptionChange,
+  handleImageChange,
 }) => {
   return (
     <Transition appear show={isQuestionOpen} as={React.Fragment}>
@@ -110,7 +118,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                         id="description"
                         value={formQuestion.description || ''}
                         onChange={handleInputQuestionChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 px-2 py-2"
+                        className="mt-1 block w-full rounded-md border-gray-300 px-2 py-2 border-[1px] shadow-sm focus:border-black"
                       />
                     </div>
 
@@ -122,14 +130,31 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                       >
                         URL Hình ảnh
                       </label>
-                      <input
-                        type="file"
-                        name="image_url"
-                        id="image_url"
-                        value={formQuestion.image_url || ''}
-                        onChange={handleInputQuestionChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 px-2 py-2"
-                      />
+                      {(imagePreview || formQuestion.image_url) && (
+                        <div className="mt-2 mb-2">
+                          <img
+                            src={imagePreview || formQuestion.image_url || ''}
+                            alt="Preview"
+                            className="w-32 h-32 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      <div className="mt-1 relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
+                        />
+                        {isUploading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                          </div>
+                        )}
+                      </div>
+                      {error && (
+                        <p className="mt-1 text-sm text-red-600">{error}</p>
+                      )}
                     </div>
 
                     {/* Difficulty */}
@@ -174,7 +199,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                                 )
                               }
                               placeholder={`Đáp án ${index + 1}`}
-                              className="mt-1 block w-2/3 rounded-md border-gray-300 px-2 py-1"
+                              className="mt-1 block w-2/3 rounded-md border-gray-300 px-2 py-1 border-[1px] shadow-sm focus:border-black"
                             />
                             <input
                               type="checkbox"
@@ -203,7 +228,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                               )
                             }
                             placeholder="Giải thích"
-                            className="mt-2 block w-full rounded-md border-gray-300 px-2 py-1"
+                            className="mt-2 block w-full rounded-md border-gray-300 px-2 py-1 border-[1px] shadow-sm focus:border-black"
                           />
                         </div>
                       ))}

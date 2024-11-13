@@ -93,9 +93,8 @@ const ModulesList: React.FC<ModulesListProps> = ({
             </div>
           </div>
 
-          {/* Hiển thị bài giảng thuộc về module nếu chương được mở rộng */}
           {expandedChapters.includes(module.id) && (
-            <div className="lessons-list mt-2 mx-2">
+            <div className="lessons-list mt-2 ml-2">
               {lessons
                 ?.filter((lesson) => lesson.module_id === module.id)
                 .map((lesson) => (
@@ -138,7 +137,7 @@ const ModulesList: React.FC<ModulesListProps> = ({
 
                     {/* Hiển thị câu hỏi nếu bài giảng được mở rộng */}
                     {expandedLessons.includes(lesson.id) && (
-                      <div className="questions-list mt-2 mx-4">
+                      <div className="questions-list mt-2 ml-2">
                         {questions
                           .filter(
                             (question) => question.lesson_id === lesson.id,
