@@ -1,21 +1,23 @@
 export interface Question {
   id: number;
-  lesson_id: number | null;
+  lesson_id?: number | null;
+  exam_id?: number | null;
   name: string;
   description: string | null;
   image_url: string | null;
   status: number;
   difficulty: number;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  status_string: string;
-  difficulty_string: string;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  status_string?: string;
+  difficulty_string?: string;
   options: Option[];
 }
 
 export interface QuestionRequest {
-  lesson_id: number | null;
+  lesson_id?: number | null;
+  exam_id?: number | null | undefined;
   name: string;
   description: string | null;
   image_url: string | null;

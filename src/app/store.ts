@@ -6,6 +6,8 @@ import courseSlice from '../services/course/courseSlice';
 import moduleSlice from '../services/module/moduleSlice';
 import lessonSlice from '../services/lesson/lessonSlice';
 import questionSlice from '../services/question/questionSlice';
+import examSlice from '../services/exam/examSlice';
+import examQuestionSlice from '../services/exam_question/examQuestionSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +18,8 @@ export const store = configureStore({
     module: moduleSlice,
     lesson: lessonSlice,
     question: questionSlice,
+    exam: examSlice,
+    examQuestion: examQuestionSlice,
   },
 });
 

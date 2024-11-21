@@ -23,6 +23,8 @@ import ProtectedRoute from './routes/ProtectectedRoute';
 import { TableSubjects } from './pages/Tables/TableSubjects';
 import { TableAuthors } from './pages/Tables/TableAuthors';
 import { CourseDetail } from './pages/CourseDetail/CourseDetail';
+import { TableExams } from './pages/Tables/TableExams';
+import ExamDetail from './pages/ExamDetail';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -134,13 +136,13 @@ function App() {
           }
         />
         <Route
-        path="/tables/tables-courses/:id"
-        element={
-          <ProtectedRoute>
-            <PageTitle title="Tables Courses Detail" />
-            <CourseDetail />
-          </ProtectedRoute>
-        }
+          path="/tables/tables-courses/:id"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Tables Courses Detail" />
+              <CourseDetail />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/tables/tables-subjects"
@@ -148,6 +150,25 @@ function App() {
             <ProtectedRoute>
               <PageTitle title="Tables Subjects" />
               <TableSubjects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tables/tables-exams"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Tables Exams" />
+              <TableExams />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tables/tables-exams/:id"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Tables Exams Detail" />
+              <ExamDetail />
             </ProtectedRoute>
           }
         />
