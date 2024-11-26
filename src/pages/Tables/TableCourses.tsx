@@ -294,7 +294,7 @@ const CourseRow = ({
     </div>
     <div className="col-span-1 flex items-center">
       <p className="text-sm font-medium text-black dark:text-white">
-        {course.price}
+        {Math.floor(course.price)}
       </p>
     </div>
     <div className="col-span-1 hidden items-center sm:flex gap-4">
@@ -499,13 +499,19 @@ const CourseModal = ({
                     type="number"
                     name="price"
                     id="price"
-                    value={formData.price || ''}
-                    onChange={(e) =>
+                    value={
+                      formData.price !== null && formData.price !== undefined
+                        ? formData.price
+                        : ''
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Nếu giá trị nhập vào là rỗng thì gán lại giá trị null, nếu không thì chuyển sang số
                       setFormData({
                         ...formData,
-                        price: parseInt(e.target.value),
-                      })
-                    }
+                        price: value === '' ? 0 : parseInt(value, 10), // Đảm bảo 0 được xử lý đúng
+                      });
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                     required
                   />
