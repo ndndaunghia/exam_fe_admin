@@ -23,7 +23,7 @@ export interface QuestionRequest {
   image_url: string | null;
   status: number | null;
   difficulty: number | null;
-  options: Option[];
+  options?: Option[];
 }
 
 export interface Option {
@@ -35,7 +35,7 @@ export interface Option {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
-  is_correct_string?: string;
+  // is_correct_string?: string;
 }
 
 export interface QuestionListResponse {

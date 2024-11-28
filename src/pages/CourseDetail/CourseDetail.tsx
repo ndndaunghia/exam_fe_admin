@@ -4,7 +4,10 @@ import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import { RootState } from '../../app/store';
 import { Course } from '../../services/course/course.type';
-import { getCoursesAsync } from '../../services/course/courseSlice';
+import {
+  getCourseDetailAsync,
+  getCoursesAsync,
+} from '../../services/course/courseSlice';
 import {
   deleteModuleAsync,
   getModuleDetailAsync,
@@ -69,13 +72,9 @@ export const CourseDetail = () => {
   const dispatch = useAppDispatch();
   const token = localStorage.getItem('token') || '';
 
-  const { courses } = useAppSelector((state: RootState) => state.course);
-  const { modules, loading } = useAppSelector(
-    (state: RootState) => state.module,
+  const { courses, courseDetail, loading } = useAppSelector(
+    (state: RootState) => state.course,
   );
-  const { lessons } = useAppSelector((state: RootState) => state.lesson);
-
-  const { questions } = useAppSelector((state: RootState) => state.question);
 
   const { uploadImage, isUploading, error } = useCloudinaryUpload({
     cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
@@ -101,8 +100,9 @@ export const CourseDetail = () => {
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(
     null,
   );
-  const [formQuestion, setFormQuestion] =
-    useState<QuestionRequest>(initialQuestionState);
+  const [formQuestion, setFormQuestion] = useState<QuestionRequest>({
+    ...initialQuestionState,
+  });
 
   const [course, setCourse] = useState<Course | null>(null);
   const [expandedChapters, setExpandedChapters] = useState<number[]>([]);
@@ -127,11 +127,14 @@ export const CourseDetail = () => {
 
   useEffect(() => {
     if (id) {
-      dispatch(getModulesAsync({ page: 1, limit: 10, token }));
-      dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
-      dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+      // dispatch(getModulesAsync({ page: 1, limit: 10, token }));
+      // dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+      // dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+      dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
     }
   }, [dispatch, id, token]);
+
+  console.log(courseDetail?.data.course);
 
   // Question
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,22 +154,22 @@ export const CourseDetail = () => {
     }
   };
 
-  const openQuestionModal = (isEditQuestionMode: boolean = false) => {
-    setIsEditQuestion(isEditQuestionMode);
-    if (!isEditQuestionMode) {
-      setFormQuestion({
-        ...initialQuestionState,
-        lesson_id: lessons[0]?.id || null,
-        options: [
-          { content: '', explanation: '', is_correct: 0 },
-          { content: '', explanation: '', is_correct: 0 },
-          { content: '', explanation: '', is_correct: 0 },
-          { content: '', explanation: '', is_correct: 0 },
-        ],
-      });
-    }
-    setIsQuestionOpen(true);
-  };
+  // const openQuestionModal = (isEditQuestionMode: boolean = false) => {
+  //   setIsEditQuestion(isEditQuestionMode);
+  //   if (!isEditQuestionMode) {
+  //     setFormQuestion({
+  //       ...initialQuestionState,
+  //       lesson_id: lessons[0]?.id || null,
+  //       options: [
+  //         { content: '', explanation: '', is_correct: 0 },
+  //         { content: '', explanation: '', is_correct: 0 },
+  //         { content: '', explanation: '', is_correct: 0 },
+  //         { content: '', explanation: '', is_correct: 0 },
+  //       ],
+  //     });
+  //   }
+  //   setIsQuestionOpen(true);
+  // };
 
   const closeQuestionModal = () => {
     setIsQuestionOpen(false);
@@ -189,7 +192,13 @@ export const CourseDetail = () => {
   };
 
   const handleEditQuestion = (questionId: number) => {
-    const questionToEdit = questions.find((q) => q.id === questionId);
+    const questionToEdit = courseDetail?.data?.course?.module
+      ?.flatMap((module) => module.lesson || [])
+      ?.flatMap((lesson) => lesson.question || [])
+      ?.find((q) => q.id === questionId);
+
+    console.log('questionToEdit', questionToEdit);
+
     if (questionToEdit) {
       setFormQuestion({
         lesson_id: questionToEdit.lesson_id,
@@ -239,6 +248,9 @@ export const CourseDetail = () => {
     } catch (error) {
       console.error('Error submitting question:', error);
     }
+    finally {
+      dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+    }
   };
 
   const handleInputQuestionChange = (
@@ -280,16 +292,16 @@ export const CourseDetail = () => {
   };
 
   // Lesson
-  const openLessonModal = (isEditLessonMode: boolean = false) => {
-    setIsEditLesson(isEditLessonMode);
-    if (!isEditLessonMode) {
-      setFormLesson({
-        ...initialLessonState,
-        module_id: modules[0]?.id || null,
-      });
-    }
-    setIsLessonOpen(true);
-  };
+  // const openLessonModal = (isEditLessonMode: boolean = false) => {
+  //   setIsEditLesson(isEditLessonMode);
+  //   if (!isEditLessonMode) {
+  //     setFormLesson({
+  //       ...initialLessonState,
+  //       module_id: modules[0]?.id || null,
+  //     });
+  //   }
+  //   setIsLessonOpen(true);
+  // };
 
   const closeLessonModal = () => {
     setIsLessonOpen(false);
@@ -306,7 +318,10 @@ export const CourseDetail = () => {
   };
 
   const handleEditLesson = (lessonId: number) => {
-    const lessonToEdit = lessons.find((l) => l.id === lessonId);
+    const lessonToEdit = courseDetail?.data?.course?.module
+      ?.flatMap((module) => module.lesson)
+      .find((l) => l.id === lessonId);
+
     if (lessonToEdit) {
       setFormLesson({
         module_id: lessonToEdit.module_id,
@@ -408,7 +423,10 @@ export const CourseDetail = () => {
   // const handleAddQuestion = (moduleId: number) => {};
 
   const handleEditModule = (moduleId: number) => {
-    const moduleToEdit = modules.find((m) => m.id === moduleId);
+    const moduleToEdit = courseDetail?.data?.course?.module?.find(
+      (m) => m.id === moduleId,
+    );
+
     if (moduleToEdit) {
       setFormModule({
         course_id: moduleToEdit.course_id,
@@ -477,6 +495,7 @@ export const CourseDetail = () => {
   };
 
   const toggleAllChapters = () => {
+    const modules = courseDetail?.data?.course?.module || [];
     setExpandedChapters(
       expandedChapters.length === modules.length
         ? []
@@ -516,9 +535,21 @@ export const CourseDetail = () => {
               {course?.description}
             </p>
             <ModulesList
-              modules={modules.filter((m) => m.course_id === course.id)}
-              lessons={lessons}
-              questions={questions}
+              modules={courseDetail?.data?.course?.module || []}
+              lessons={
+                courseDetail?.data?.course?.module
+                  .map((m) => m.lesson)
+                  .flat() || []
+              }
+              questions={
+                courseDetail?.data?.course?.module.reduce((acc, module) => {
+                  return acc.concat(
+                    module.lesson.reduce((lessonAcc, lesson) => {
+                      return lessonAcc.concat(lesson.question || []);
+                    }, []),
+                  );
+                }, []) || []
+              }
               loading={loading}
               toggleAllChapters={toggleAllChapters}
               expandedChapters={expandedChapters}

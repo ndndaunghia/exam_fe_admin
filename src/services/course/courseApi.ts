@@ -1,5 +1,5 @@
 import axiosInstance from '../../utils/axiosInstance';
-import { CourseListResponse, CourseRequest, CourseResponse, CourseUpdateResponse } from './course.type';
+import { Course, CourseDetailResponse, CourseListResponse, CourseRequest, CourseResponse, CourseUpdateResponse } from './course.type';
 
 //API thêm khoa' học
 export const upsertCourse = async (data: CourseRequest, token: string) => {
@@ -45,7 +45,7 @@ export const updateCourse= async (
 
 //API xem chi tiết khoa' học
 export const getCourseDetail = async (id: number, token: string) => {
-  const response = await axiosInstance.get<CourseResponse>(`/courses/${id}`, {
+  const response = await axiosInstance.get<CourseDetailResponse>(`/courses/${id}/detail`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

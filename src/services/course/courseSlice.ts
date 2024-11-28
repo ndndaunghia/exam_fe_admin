@@ -1,7 +1,19 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-import { Course, CourseListResponse, CourseRequest, CourseResponse } from './course.type';
-import { deleteCourse, getCourseDetail, getCourses, updateCourse, upsertCourse } from './courseApi';
+import {
+  Course,
+  CourseDetailResponse,
+  CourseListResponse,
+  CourseRequest,
+  CourseResponse,
+} from './course.type';
+import {
+  deleteCourse,
+  getCourseDetail,
+  getCourses,
+  updateCourse,
+  upsertCourse,
+} from './courseApi';
 import { COURSE_CONSTANTS } from '../../constants/Course';
 
 interface CourseState {
@@ -12,6 +24,7 @@ interface CourseState {
   loading: boolean;
   error: string | null;
   success: boolean;
+  courseDetail: CourseDetailResponse | null;
 }
 
 const initialState: CourseState = {
@@ -22,6 +35,7 @@ const initialState: CourseState = {
   loading: false,
   error: null,
   success: false,
+  courseDetail: null,
 };
 
 // Async thunk cho việc lấy danh sách khoá học
@@ -79,10 +93,7 @@ export const getCourseDetailAsync = createAsyncThunk(
   'course/getCourseDetail',
   async (courseData: { id: number; token: string }, { rejectWithValue }) => {
     try {
-      const response = await getCourseDetail(
-        courseData.id,
-        courseData.token,
-      );
+      const response = await getCourseDetail(courseData.id, courseData.token);
       return response;
     } catch (error: any) {
       return rejectWithValue(COURSE_CONSTANTS.COURSE_DETAIL_FAIL);
@@ -193,6 +204,25 @@ const courseSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         state.success = false;
+      })
+
+      // Xem chi tiết khoá học
+      .addCase(getCourseDetailAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(
+        getCourseDetailAsync.fulfilled,
+        (state, action: PayloadAction<CourseDetailResponse>) => {
+          state.loading = false;
+          state.success = true;
+          state.courseDetail = action.payload;
+        },
+      )
+      .addCase(getCourseDetailAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

@@ -4,9 +4,8 @@ import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { FaQuestionCircle } from 'react-icons/fa';
 import EditIcon from '../../icons/EditIcon';
 import DeleteIcon from '../../icons/DeleteIcon';
-import { Module } from '../../services/module/module.type';
-import { Lesson } from '../../services/lesson/lesson.type';
-import { Question } from '../../services/question/question.type';
+import { Lesson, Module, Question } from '../../services/course/course.type';
+
 
 interface ModulesListProps {
   modules: Module[];
@@ -55,6 +54,11 @@ const ModulesList: React.FC<ModulesListProps> = ({
         : [...prev, lessonId],
     );
   };
+
+  console.log('modules', modules);
+  console.log('lessons', lessons);
+  console.log('questions', questions);
+  
 
   return (
     <div className="mt-10 flex flex-col gap-2">
