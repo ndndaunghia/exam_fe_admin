@@ -38,10 +38,11 @@ const ExamDetail = () => {
     useState<QuestionRequest>(initialQuestionState);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { uploadImage, isUploading, error } = useCloudinaryUpload({
-    cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-    uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESENT_NAME,
-  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadName = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESENT_NAME;
+
 
   const dispatch = useAppDispatch();
   const { examQuestions, loading } = useAppSelector(
@@ -60,20 +61,31 @@ const ExamDetail = () => {
     fetchExamQuestions();
   }, [fetchExamQuestions]);
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
 
-    setImagePreview(URL.createObjectURL(file));
+    if (file) {
+      setIsLoading(true);
 
-    try {
-      const imageUrl = await uploadImage(file);
-      if (imageUrl) {
-        setFormData((prev) => ({ ...prev, image_url: imageUrl }));
-      }
-    } catch {
-      toast.error('Failed to upload image');
-      setImagePreview(null);
+      const cloudFormData = new FormData();
+      cloudFormData.append('file', file);
+      cloudFormData.append('upload_preset', uploadName);
+      fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: cloudFormData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          
+          setIsLoading(false);
+          console.log(data);
+          setImagePreview(data.secure_url);
+          setFormData((prevData) => ({
+            ...prevData,
+            image_url: data.secure_url,
+          }));
+        });
     }
   };
 
@@ -130,6 +142,8 @@ const ExamDetail = () => {
           }),
         ).unwrap();
       } else {
+        console.log('formData', formData);
+        
         await dispatch(
           upsertExamQuestionAsync({
             data: { ...formData, exam_id: Number(id) || null },
@@ -301,14 +315,14 @@ const ExamDetail = () => {
                         >
                           Nội dung câu hỏi
                         </label>
-                        <input
-                          type="text"
+                        <textarea
                           name="name"
                           id="name"
                           value={formData.name}
                           onChange={handleInputQuestionChange}
                           className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                           required
+                          rows={4}
                         />
                       </div>
 
@@ -351,15 +365,15 @@ const ExamDetail = () => {
                             onChange={handleImageChange}
                             className="mt-1 block w-full rounded-md border-gray-700 border-[1px] shadow-sm focus:border-black focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-2 py-2"
                           />
-                          {isUploading && (
+                          {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
                             </div>
                           )}
                         </div>
-                        {error && (
+                        {/* {error && (
                           <p className="mt-1 text-sm text-red-600">{error}</p>
-                        )}
+                        )} */}
                       </div>
 
                       <div className="mb-4">
