@@ -18,7 +18,7 @@ const CourseSummary: React.FC<CourseSummaryProps> = ({ course }) => {
             className="w-full h-full object-cover hover:opacity-80 rounded-xl"
           />
         </div>
-        <div className="flex flex-col items-center justify-center">
+        {/* <div className="flex flex-col items-center justify-center">
           <h4 className="text-primary-light my-4">{course.price}đ</h4>
           <button className="bg-secondary-light text-white px-6 py-3 rounded-md hover:bg-secondary">
             MUA NGAY
@@ -37,7 +37,7 @@ const CourseSummary: React.FC<CourseSummaryProps> = ({ course }) => {
               Học mọi lúc mọi nơi
             </li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

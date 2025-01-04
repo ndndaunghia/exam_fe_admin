@@ -149,16 +149,16 @@ const TableCourses: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Table Courses" />
+      <Breadcrumb pageName="Danh sách khoá học" />
       <div className="flex flex-col gap-10">
         {loading ? (
           <div className="text-center p-10">Đang tải dữ liệu...</div>
         ) : (
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
             <div className="py-6 px-4 md:px-6 xl:px-7.5">
-              <h4 className="text-xl font-semibold text-black dark:text-white">
+              {/* <h4 className="text-xl font-semibold text-black dark:text-white">
                 Top Products
-              </h4>
+              </h4> */}
             </div>
             <div className="grid grid-cols-9 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
               <div className="col-span-1 flex items-center">

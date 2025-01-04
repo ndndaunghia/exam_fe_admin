@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
-import Logo from '../../images/logo/logo.svg';
+import Logo from '../../images/exam_logo.jpeg';
 import { useAppSelector } from '../../hooks/useAppDispatch';
 
 interface SidebarProps {
@@ -67,8 +67,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     >
       {/* <!-- SIDEBAR HEADER --> */}
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-        <NavLink to="/">
-          <img src={Logo} alt="Logo" />
+        <NavLink to="/" className="flex gap-2 justify-center items-center">
+          <img className="w-12 rounded-lg" src={Logo} alt="" />
+          <span className="text-2xl font-semibold leading-6 bg-gradient-to-r from-[#006e4a] to-[#006E9A] bg-clip-text text-transparent">
+            Sky Edu
+          </span>
         </NavLink>
 
         <button
@@ -110,7 +113,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   {(handleClick, open) => {
                     return (
                       <React.Fragment>
-                        {/* <NavLink
+                        <NavLink
                           to="#"
                           className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                             (pathname === '/' ||
@@ -167,7 +170,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               fill=""
                             />
                           </svg>
-                        </NavLink> */}
+                        </NavLink>
                         <div
                           className={`translate transform overflow-hidden ${
                             !open && 'hidden'
@@ -182,7 +185,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                   (isActive && '!text-white')
                                 }
                               >
-                                eCommerce
+                                Trang chủ
                               </NavLink>
                             </li>
                           </ul>
