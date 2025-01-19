@@ -25,6 +25,8 @@ import { TableAuthors } from './pages/Tables/TableAuthors';
 import { CourseDetail } from './pages/CourseDetail/CourseDetail';
 import { TableExams } from './pages/Tables/TableExams';
 import ExamDetail from './pages/ExamDetail';
+import ExamHistoryTable from './pages/Tables/TableHistoryExam';
+import PurchasedCoursesTable from './pages/Tables/PurchasedCourseTable';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -123,6 +125,24 @@ function App() {
             <ProtectedRoute>
               <PageTitle title="Tables Authors" />
               <TableAuthors />
+            </ProtectedRoute>
+          }
+        />
+          <Route
+          path="/tables/tables-history-exams"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="History Exams" />
+              <ExamHistoryTable />
+            </ProtectedRoute>
+          }
+        />
+           <Route
+          path="/tables/tables-purchased-courses"
+          element={
+            <ProtectedRoute>
+              <PageTitle title="Purchased Courses" />
+              <PurchasedCoursesTable />
             </ProtectedRoute>
           }
         />
