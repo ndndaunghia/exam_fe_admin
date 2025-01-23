@@ -8,7 +8,9 @@ import EditIcon from '../../icons/EditIcon';
 import DeleteIcon from '../../icons/DeleteIcon';
 import Loader from '../../common/Loader';
 import { QuestionRequest } from '../../services/question/question.type';
+import { FaDownload, FaUpload } from 'react-icons/fa6';
 import toast, { Toaster } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import {
   deleteExamQuestionAsync,
   getExamQuestionsAsync,
@@ -16,6 +18,7 @@ import {
   upsertExamQuestionAsync,
 } from '../../services/exam_question/examQuestionSlice';
 import { useCloudinaryUpload } from '../../hooks/useCloudinaryUpload';
+import axios from 'axios';
 
 const initialQuestionState: QuestionRequest = {
   exam_id: null,
@@ -42,7 +45,6 @@ const ExamDetail = () => {
 
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const uploadName = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESENT_NAME;
-
 
   const dispatch = useAppDispatch();
   const { examQuestions, loading } = useAppSelector(
@@ -77,7 +79,7 @@ const ExamDetail = () => {
         .then((response) => response.json())
         .then((data) => {
           console.log(data);
-          
+
           setIsLoading(false);
           console.log(data);
           setImagePreview(data.secure_url);
@@ -143,7 +145,7 @@ const ExamDetail = () => {
         ).unwrap();
       } else {
         console.log('formData', formData);
-        
+
         await dispatch(
           upsertExamQuestionAsync({
             data: { ...formData, exam_id: Number(id) || null },
@@ -174,10 +176,127 @@ const ExamDetail = () => {
     }
   };
 
+  const handleXLSXUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('exam_id', id || ''); // Use the exam ID from the URL
+
+    try {
+      const token = localStorage.getItem('token') || '';
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/v1.0/admin/exam-questions/import',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Show success toast
+      toast.success('XLSX imported successfully');
+
+      // Refresh the exam questions
+      fetchExamQuestions();
+    } catch (error) {
+      // Show error toast
+      toast.error('Failed to import XLSX');
+      console.error('XLSX upload error:', error);
+    }
+  };
+
+  const generateExcelTemplate = () => {
+    // Define the structure of your template
+    const templateData = [
+      [
+        'Tên câu hỏi',
+        'Mô tả',
+        'Độ khó',
+        'Đáp án 1',
+        'Giải thích 1',
+        'Đáp án 2',
+        'Giải thích 2',
+        'Đáp án 3',
+        'Giải thích 3',
+        'Đáp án 4',
+        'Giải thích 4',
+        'Đáp án đúng'
+      ]
+    ];
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Câu hỏi');
+
+    // Generate and download file
+    XLSX.writeFile(workbook, `exam_question_template.xlsx`);
+  };
+
   return (
     <>
       <Breadcrumb pageName={`Exam Details: ${id}`} />
 
+      {/* <div className="mt-4 mr-auto">
+        <button onClick={generateExcelTemplate}>
+          <FaDownload size={28}/>
+        </button>
+      </div> */}
+      <div className="mt-4">
+        
+        <label
+          htmlFor="xlsx-download"
+          onClick={generateExcelTemplate}
+          className="fixed bottom-5 right-44 bg-green-500 text-white rounded-full p-4 hover:bg-blue-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+        </label>
+      </div>
+      <div className="mt-4">
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={handleXLSXUpload}
+          className="hidden"
+          id="xlsx-upload"
+        />
+        <label
+          htmlFor="xlsx-upload"
+          className="fixed bottom-5 right-28 bg-blue-500 text-white rounded-full p-4 hover:bg-blue-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+        </label>
+      </div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="p-4 md:p-6 xl:p-7.5">
           <div className="flex items-center justify-between">
@@ -456,7 +575,7 @@ const ExamDetail = () => {
                           htmlFor="status"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Trạng tháiÏ
+                          Trạng thái
                         </label>
                         <select
                           name="status"
