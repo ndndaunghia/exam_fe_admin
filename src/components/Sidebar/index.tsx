@@ -481,6 +481,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 Danh sách tác giả
                               </NavLink>
                             </li>
+                            <li>
+                              <NavLink
+                                to="/tables/tables-history-exams"
+                                className={({ isActive }) =>
+                                  'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                  (isActive && '!text-white')
+                                }
+                              >
+                                Lịch sử làm bài thi
+                              </NavLink>
+                            </li>
+                            <li>
+                              <NavLink
+                                to="/tables/tables-purchased-courses"
+                                className={({ isActive }) =>
+                                  'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                  (isActive && '!text-white')
+                                }
+                              >
+                                Khoá học đã bán
+                              </NavLink>
+                            </li>
                           </ul>
                         </div>
                       </React.Fragment>
