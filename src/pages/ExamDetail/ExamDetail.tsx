@@ -279,7 +279,7 @@ const ExamDetail = () => {
         />
         <label
           htmlFor="xlsx-upload"
-          className="fixed bottom-5 right-28 bg-blue-500 text-white rounded-full p-4 hover:bg-blue-600 transition-colors"
+          className="fixed bottom-5 right-26 bg-blue-500 text-white rounded-full p-4 hover:bg-blue-600 transition-colors"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
