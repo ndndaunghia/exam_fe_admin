@@ -36,9 +36,11 @@ export const TableSubjects = () => {
   // Lấy token từ localStorage
   const fetchSubjects = useCallback(() => {
     if (token) {
+      console.log('fetchSubjects');
+      
       dispatch(getSubjectsAsync({ page: 1, limit: 10, token }));
     }
-  }, [dispatch]);
+  }, [dispatch, token]);
 
   // Mở form thêm hoặc chỉnh sửa môn học
   function handleEdit(item: Subject) {
@@ -127,7 +129,7 @@ export const TableSubjects = () => {
     if (!subjects || subjects.length === 0) {
       fetchSubjects();
     }
-  }, [dispatch, subjects]);
+  }, [dispatch]);
 
   return (
     <>

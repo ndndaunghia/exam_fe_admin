@@ -145,7 +145,7 @@ const TableCourses: React.FC = () => {
 
   useEffect(() => {
     if (!courses || courses.length === 0) fetchAllCourses();
-  }, [fetchAllCourses, courses]);
+  }, [fetchAllCourses]);
 
   return (
     <>

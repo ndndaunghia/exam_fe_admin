@@ -121,7 +121,7 @@ export const TableAuthors = () => {
     if (!authors || authors.length === 0) {
       fetchAuthors();
     }
-  }, [dispatch, authors]);
+  }, [dispatch]);
 
   return (
     <>
