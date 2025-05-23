@@ -245,6 +245,9 @@ export const CourseDetail = () => {
       closeQuestionModal();
       // Refresh questions list
       dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+      if (id) {
+        await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+      }
     } catch (error) {
       console.error('Error submitting question:', error);
     }
@@ -277,6 +280,9 @@ export const CourseDetail = () => {
         console.log('Deleting question:', questionId);
         await dispatch(deleteQuestionAsync({ id: questionId, token }));
         dispatch(getQuestionsAsync({ page: 1, limit: 10, token }));
+        if (id) {
+          await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+        }
       } catch (error) {
         console.error('Error deleting question:', error);
       }
@@ -367,6 +373,9 @@ export const CourseDetail = () => {
       closeLessonModal();
       // Refresh lessons list
       dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+      if (id) {
+        await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+      }
     } catch (error) {
       console.error('Error submitting lesson:', error);
     }
@@ -394,6 +403,9 @@ export const CourseDetail = () => {
         console.log('Deleting lesson:', lessonId);
         await dispatch(deleteLessonAsync({ id: lessonId, token }));
         dispatch(getLessonsAsync({ page: 1, limit: 10, token }));
+        if (id) {
+          await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+        }
       } catch (error) {
         console.error('Error deleting lesson:', error);
       }
@@ -462,6 +474,9 @@ export const CourseDetail = () => {
         );
       } else {
         await dispatch(upsertModuleAsync({ data: formattedData, token }));
+        if (id) {
+          await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+        }
       }
       closeModuleModal();
       // Refresh modules list
@@ -510,6 +525,9 @@ export const CourseDetail = () => {
         console.log('Deleting module:', moduleId);
         await dispatch(deleteModuleAsync({ id: moduleId, token }));
         dispatch(getModulesAsync({ page: 1, limit: 10, token }));
+        if (id) {
+          await dispatch(getCourseDetailAsync({ id: parseInt(id), token }));
+        }
       } catch (error) {
         console.error('Error deleting module:', error);
       }
